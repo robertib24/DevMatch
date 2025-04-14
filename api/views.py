@@ -3,10 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import CV, JobDescription, MatchResult
 from .serializers import CVSerializer, JobDescriptionSerializer, MatchResultSerializer
-from .utils import (
-    extract_text_from_docx, get_industry_score, calculate_technical_skills_score,
-    calculate_description_match_score, calculate_total_match_score
-)
+from .utils import extract_text_from_docx
+from .gemini_utils import GeminiAI
 import os
 
 class CVViewSet(viewsets.ModelViewSet):
@@ -19,6 +17,7 @@ class CVViewSet(viewsets.ModelViewSet):
         
         cv = CV.objects.create(name=name, file=file)
         
+        # Extract text from the file
         file_path = cv.file.path
         content = extract_text_from_docx(file_path)
         cv.content = content
@@ -32,28 +31,39 @@ class CVViewSet(viewsets.ModelViewSet):
         """Find the best matching job for a CV"""
         cv = self.get_object()
         
+        # Get all jobs
         jobs = JobDescription.objects.all()
+        if not jobs:
+            return Response({'message': 'No jobs found'}, status=status.HTTP_404_NOT_FOUND)
         
+        gemini = GeminiAI()
+        
+        # Calculate match scores for each job
         results = []
         for job in jobs:
-            # Calculate scores
-            industry_score = get_industry_score(cv.content, job.industry)
-            tech_skills_score = calculate_technical_skills_score(cv.content, job.technical_skills)
-            description_match_score = calculate_description_match_score(cv.content, job.content)
+            # Get match scores from Gemini
+            match_result = gemini.process_cv_job_match(
+                cv_text=cv.content,
+                job_description=job.content,
+                job_industry=job.industry,
+                technical_skills=job.technical_skills
+            )
             
             # Calculate total score
-            total_score = calculate_total_match_score(
-                industry_score, tech_skills_score, description_match_score
+            total_score = (
+                match_result['industry_score'] * 0.1 + 
+                match_result['tech_skills_score'] * 0.3 + 
+                match_result['description_match_score'] * 0.6
             )
             
             # Save the match result
-            match_result, _ = MatchResult.objects.update_or_create(
+            match, _ = MatchResult.objects.update_or_create(
                 cv=cv,
                 job=job,
                 defaults={
-                    'industry_score': industry_score,
-                    'tech_skills_score': tech_skills_score,
-                    'description_match_score': description_match_score,
+                    'industry_score': match_result['industry_score'],
+                    'tech_skills_score': match_result['tech_skills_score'],
+                    'description_match_score': match_result['description_match_score'],
                     'total_score': total_score
                 }
             )
@@ -61,18 +71,17 @@ class CVViewSet(viewsets.ModelViewSet):
             results.append({
                 'job': JobDescriptionSerializer(job).data,
                 'total_score': total_score,
-                'industry_score': industry_score,
-                'tech_skills_score': tech_skills_score,
-                'description_match_score': description_match_score
+                'industry_score': match_result['industry_score'],
+                'tech_skills_score': match_result['tech_skills_score'],
+                'description_match_score': match_result['description_match_score'],
+                'explanation': match_result.get('explanation', '')
             })
         
         # Sort by total score
         results.sort(key=lambda x: x['total_score'], reverse=True)
         
         # Return the best match
-        if results:
-            return Response(results[0])
-        return Response({'message': 'No jobs found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(results[0])
 
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     queryset = JobDescription.objects.all()
@@ -85,28 +94,38 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         
         # Get all CVs
         cvs = CV.objects.all()
+        if not cvs:
+            return Response({'message': 'No CVs found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Initialize the Gemini AI
+        gemini = GeminiAI()
         
         # Calculate match scores for each CV
         results = []
         for cv in cvs:
-            # Calculate scores
-            industry_score = get_industry_score(cv.content, job.industry)
-            tech_skills_score = calculate_technical_skills_score(cv.content, job.technical_skills)
-            description_match_score = calculate_description_match_score(cv.content, job.content)
+            # Get match scores from Gemini
+            match_result = gemini.process_cv_job_match(
+                cv_text=cv.content,
+                job_description=job.content,
+                job_industry=job.industry,
+                technical_skills=job.technical_skills
+            )
             
             # Calculate total score
-            total_score = calculate_total_match_score(
-                industry_score, tech_skills_score, description_match_score
+            total_score = (
+                match_result['industry_score'] * 0.1 + 
+                match_result['tech_skills_score'] * 0.3 + 
+                match_result['description_match_score'] * 0.6
             )
             
             # Save the match result
-            match_result, _ = MatchResult.objects.update_or_create(
+            match, _ = MatchResult.objects.update_or_create(
                 cv=cv,
                 job=job,
                 defaults={
-                    'industry_score': industry_score,
-                    'tech_skills_score': tech_skills_score,
-                    'description_match_score': description_match_score,
+                    'industry_score': match_result['industry_score'],
+                    'tech_skills_score': match_result['tech_skills_score'],
+                    'description_match_score': match_result['description_match_score'],
                     'total_score': total_score
                 }
             )
@@ -114,9 +133,10 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
             results.append({
                 'cv': CVSerializer(cv).data,
                 'total_score': total_score,
-                'industry_score': industry_score,
-                'tech_skills_score': tech_skills_score,
-                'description_match_score': description_match_score
+                'industry_score': match_result['industry_score'],
+                'tech_skills_score': match_result['tech_skills_score'],
+                'description_match_score': match_result['description_match_score'],
+                'explanation': match_result.get('explanation', '')
             })
         
         # Sort by total score and get top 5

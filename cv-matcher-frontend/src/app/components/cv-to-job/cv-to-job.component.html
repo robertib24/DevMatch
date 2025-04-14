@@ -1,0 +1,106 @@
+<div class="container">
+    <h2>Find Best Job Match for a CV</h2>
+    
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Select or Upload CV</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="cvForm">
+          <!-- Existing CV Selection -->
+          <h3>Select Existing CV</h3>
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Select CV</mat-label>
+            <mat-select formControlName="selectedCvId" (selectionChange)="onCvSelect($event)">
+              <mat-option *ngFor="let cv of existingCVs" [value]="cv.id">
+                {{ cv.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <div class="divider">
+            <span>OR</span>
+          </div>
+          
+          <!-- New CV Upload -->
+          <div formGroupName="newCv">
+            <h3>Upload New CV</h3>
+            
+            <div class="file-upload">
+              <button type="button" mat-raised-button (click)="fileInput.click()">
+                Choose File
+              </button>
+              <input hidden #fileInput type="file" (change)="onFileChange($event)" accept=".docx">
+              <span *ngIf="cvForm.get('newCv').get('file').value">
+                {{ cvForm.get('newCv').get('file').value.name }}
+              </span>
+            </div>
+            
+            <button mat-raised-button color="primary" (click)="onSubmitNewCV()" 
+                   [disabled]="!cvForm.get('newCv').get('file').value || loading">
+              Upload CV & Find Best Job
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Results Section -->
+    <div *ngIf="loading" class="loading-spinner">
+      <mat-spinner></mat-spinner>
+    </div>
+    
+    <div *ngIf="bestMatchingJob && !loading" class="results-section">
+        <h2>Best Matching Job</h2>
+        
+        <mat-card class="result-card">
+          <mat-card-header>
+            <mat-card-title>{{ bestMatchingJob.job.title }}</mat-card-title>
+            <mat-card-subtitle>Overall Match: {{ (bestMatchingJob.total_score * 100).toFixed(1) }}%</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <h4>Job Details:</h4>
+            <p><strong>Industry:</strong> {{ bestMatchingJob.job.industry }}</p>
+            <p><strong>Description:</strong></p>
+            <p class="job-description">{{ bestMatchingJob.job.content }}</p>
+            
+            <h4>Match Breakdown:</h4>
+            <div class="score-details">
+              <div class="score-item">
+                <span>Industry Knowledge (10%):</span>
+                <div class="progress-bar">
+                  <div class="progress" [style.width.%]="bestMatchingJob.industry_score * 100"></div>
+                </div>
+                <span>{{ (bestMatchingJob.industry_score * 100).toFixed(1) }}%</span>
+              </div>
+              
+              <div class="score-item">
+                <span>Technical Skills (30%):</span>
+                <div class="progress-bar">
+                  <div class="progress" [style.width.%]="bestMatchingJob.tech_skills_score * 100"></div>
+                </div>
+                <span>{{ (bestMatchingJob.tech_skills_score * 100).toFixed(1) }}%</span>
+              </div>
+              
+              <div class="score-item">
+                <span>Job Description Match (60%):</span>
+                <div class="progress-bar">
+                  <div class="progress" [style.width.%]="bestMatchingJob.description_match_score * 100"></div>
+                </div>
+                <span>{{ (bestMatchingJob.description_match_score * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+            
+            <h4>Required Technical Skills:</h4>
+            <div class="skills-list">
+              <mat-chip-list>
+                <mat-chip *ngFor="let skill of getSkills(bestMatchingJob.job.technical_skills)">
+                  {{ skill.name }} ({{ skill.weight }}%)
+                </mat-chip>
+              </mat-chip-list>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
