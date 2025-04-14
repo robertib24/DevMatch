@@ -15,6 +15,7 @@ class CVViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         name = request.data.get('name', file.name)
         
+        # Save the file
         cv = CV.objects.create(name=name, file=file)
         
         # Extract text from the file
@@ -36,6 +37,7 @@ class CVViewSet(viewsets.ModelViewSet):
         if not jobs:
             return Response({'message': 'No jobs found'}, status=status.HTTP_404_NOT_FOUND)
         
+        # Initialize the Gemini AI
         gemini = GeminiAI()
         
         # Calculate match scores for each job
