@@ -69,7 +69,7 @@ export class CvToJobComponent implements OnInit {
     }
   }
 
-    getSkills(technicalSkills: any): any[] {
+   getSkills(technicalSkills: any): any[] {
         return Object.keys(technicalSkills).map(key => {
         return {
             name: key,
