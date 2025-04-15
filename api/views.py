@@ -1,31 +1,37 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 from .models import CV, JobDescription, MatchResult
 from .serializers import CVSerializer, JobDescriptionSerializer, MatchResultSerializer
 from .utils import extract_text_from_docx
 from .gemini_utils import GeminiAI
 import os
 
+def api_home(request):
+    return JsonResponse({"message": "Welcome to the API!"})
+
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
     
+    @csrf_exempt
     def create(self, request, *args, **kwargs):
+        print("FILES:", request.FILES)
+        print("DATA:", request.data)
+
         file = request.FILES.get('file')
+        if not file:
+            return Response({"error": "No file provided"}, status=400)
+
         name = request.data.get('name', file.name)
-        
-        # Save the file
         cv = CV.objects.create(name=name, file=file)
-        
-        # Extract text from the file
+
         file_path = cv.file.path
-        content = extract_text_from_docx(file_path)
-        cv.content = content
-        cv.save()
-        
-        serializer = self.get_serializer(cv)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        extracted_text = extract_text_from_docx(file_path)
+
+        return Response({"message": "CV uploaded successfully", "extracted_text": extracted_text}, status=201)
     
     @action(detail=True, methods=['get'])
     def find_best_job(self, request, pk=None):
