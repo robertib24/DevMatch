@@ -1,0 +1,43 @@
+// Colors
+$color-primary: #0094C0;
+$color-primary-light: #e7f2f6;
+$color-primary-dark: #09485d;
+
+$color-blue-1: #107fa4;
+$color-grey-1: #032b43;
+$color-grey-2: #70717a;
+$color-grey-3: #d3d4d9;
+$color-grey-4: #eef2f8;
+$color-grey-5: #f5f7fa;
+$color-grey-80: #ccc;
+$color-sonic-silver: #70717a;
+$color-white: #ffffff;
+
+// Font
+$font-size: 16px;
+$font-family: "Lato", Helvetica, Arial, sans-serif;
+$font-weight: 400;
+$font-weight-bold: 700;
+$text-color: $color-grey-1;
+
+//   Z-index
+$z-index-below: 0;
+$z-index-above: 2;
+$z-index-header: 3;
+$z-index-sidebar: 4;
+$z-index-overlay: 5;
+
+//   Form controls
+$input-padding-horizontal: 0.5rem;
+$input-padding-vertical: 0.25rem;
+$form-control-height: 2.5rem;
+$form-control-height-small: 2rem;
+
+//  General / Other
+$border-radius: 3px;
+$transition-time: 0.2s;
+$footer-height: 3rem;
+$mobile-footer-height: 3.625rem;
+
+$section-gap: 1.5rem;
+$separator-line-margin: -0.5rem;
