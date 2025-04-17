@@ -1,36 +1,59 @@
-.app-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+@import "../styles.scss";
+
+:host {
+  height: 100%;
+  width: 100%;
+}
+
+.site-wrapper {
+  position: relative;
+  display: grid;
+  height: 100%;
+  width: 100%;
+  padding-right: 24px;
+  min-height: 100%;
+  gap: 24px;
+
+  grid-template:
+    "sidebar header" min-content
+    "sidebar main" 1fr
+    "sidebar footer" min-content / 4rem 1fr;
+}
+
+.site-header {
+  grid-area: header;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+}
+
+.site-wrapper {
+  background: $color-grey-5;
+}
+
+.site-sidebar {
+  background-color: $color-primary;
+
+  P {
+    color: white;
+    font-weight: bold;
+    transform: translate3d(-50%, -50%, 0);
+    word-break: break-word;
+    width: 0;
   }
-  
-  .spacer {
-    flex: 1 1 auto;
-  }
-  
-  mat-toolbar {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  nav {
-    a {
-      margin-left: 10px;
-      
-      &.active {
-        background-color: rgba(255, 255, 255, 0.15);
-      }
-    }
-  }
-  
-  main {
-    flex: 1;
-    background-color: #f5f5f5;
-  }
-  
-  footer {
-    padding: 15px;
-    text-align: center;
-    background-color: #f0f0f0;
-    color: #666;
-    font-size: 14px;
-  }
+}
+
+.site-main {
+  background-color: white;
+}
+
+.site-sidebar {
+  grid-area: sidebar;
+  min-width: 0;
+  z-index: 4;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

@@ -1,0 +1,34 @@
+// SPACINGS MIXIN
+
+$max: 300;
+$offset: 1;
+
+@mixin spacings-loop($className, $styleName, $unit) {
+  $i: 0;
+  @while $i <= $max {
+    #{$className + $i} {
+      #{$styleName}: #{$i + $unit};
+    }
+    $i: $i + $offset;
+  }
+}
+
+
+// Margins
+
+@include spacings-loop(".margin-top-", "margin-top", "px");
+@include spacings-loop(".margin-right-", "margin-right", "px");
+@include spacings-loop(".margin-bottom-", "margin-bottom", "px");
+@include spacings-loop(".margin-left-", "margin-left", "px");
+
+@include spacings-loop(".padding-top-", "padding-top", "px");
+@include spacings-loop(".padding-right-", "padding-right", "px");
+@include spacings-loop(".padding-bottom-", "padding-bottom", "px");
+@include spacings-loop(".padding-left-", "padding-left", "px");
+
+// Dimensions
+@include spacings-loop(".height-", "height", "px");
+@include spacings-loop(".width-", "width", "px");
+
+@include spacings-loop(".width-p-", "width", "%");
+@include spacings-loop(".height-p-", "height", "%");

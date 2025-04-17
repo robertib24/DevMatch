@@ -1,0 +1,36 @@
+/*
+  Misc
+*/
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer-hover {
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.cursor-help {
+  cursor: help;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+.draggable-item {
+  cursor: move;
+  touch-action: none;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.position-sticky-container {
+  overflow: initial;
+  min-height: 100%;
+  position: relative;
+}
