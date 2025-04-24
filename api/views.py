@@ -1,4 +1,3 @@
-# api/views.py
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -6,6 +5,7 @@ from django.core.files.uploadedfile import UploadedFile
 from .models import CV, JobDescription, MatchResult
 from .serializers import CVSerializer, JobDescriptionSerializer, MatchResultSerializer
 from .gemini_utils import GeminiAI
+from django.db import transaction
 import os
 import re
 import docx
@@ -26,8 +26,8 @@ class CVViewSet(viewsets.ModelViewSet):
         print(f"Processing CV file: {name}")
 
         if not file.name.lower().endswith('.docx'):
-             print(f"!!! CV Upload Error: Invalid file type for {name}.")
-             return Response({'detail': 'Invalid file type. Only .docx allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+            print(f"!!! CV Upload Error: Invalid file type for {name}.")
+            return Response({'detail': 'Invalid file type. Only .docx allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             file.seek(0)
@@ -37,13 +37,15 @@ class CVViewSet(viewsets.ModelViewSet):
             content = "\n".join(paras)
             print(f"Extracted content length for {name}: {len(content)}")
             if not content:
-                  print(f"!!! CV Upload Error: Could not extract text from {name}.")
-                  return Response({'detail': 'Could not extract text content from the file.'}, status=status.HTTP_400_BAD_REQUEST)
+                print(f"!!! CV Upload Error: Could not extract text from {name}.")
+                return Response({'detail': 'Could not extract text content from the file.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            file.seek(0)
-            print(f"Attempting to create CV object for {name}...")
-            cv = CV.objects.create(name=name, file=file, content=content)
-            print(f"CV object created with ID: {cv.id}")
+        # Use transaction to ensure database consistency
+            with transaction.atomic():
+                file.seek(0)
+                print(f"Attempting to create CV object for {name}...")
+                cv = CV.objects.create(name=name, file=file, content=content)
+                print(f"CV object created with ID: {cv.id}")
 
             serializer = self.get_serializer(cv)
             print(f"Successfully processed CV {name}.")
@@ -150,40 +152,40 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         print(f"Processing Job Description file: {file.name}")
 
         if not file.name.lower().endswith('.docx'):
-             print(f"!!! Job Upload Error: Invalid file type for {file.name}.")
-             return Response({'detail': 'Invalid file type. Only .docx allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+            print(f"!!! Job Upload Error: Invalid file type for {file.name}.")
+            return Response({'detail': 'Invalid file type. Only .docx allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # 1. Extrage textul
+            # 1. Extract text
             try:
-                 file.seek(0)
-                 print(f"Attempting to read docx content for {file.name}...")
-                 document = docx.Document(file)
-                 paras = [p.text for p in document.paragraphs if p.text.strip()]
-                 full_text = "\n".join(paras)
-                 print(f"Extracted job content length: {len(full_text)}")
-                 if not full_text:
-                      print(f"!!! Job Upload Error: Could not extract text from {file.name}.")
-                      return Response({'detail': 'Could not extract text content from the file.'}, status=status.HTTP_400_BAD_REQUEST)
+                file.seek(0)
+                print(f"Attempting to read docx content for {file.name}...")
+                document = docx.Document(file)
+                paras = [p.text for p in document.paragraphs if p.text.strip()]
+                full_text = "\n".join(paras)
+                print(f"Extracted job content length: {len(full_text)}")
+                if not full_text:
+                    print(f"!!! Job Upload Error: Could not extract text from {file.name}.")
+                    return Response({'detail': 'Could not extract text content from the file.'}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                 print(f"!!! Job Upload Error: Failed reading docx {file.name}: {e}")
-                 return Response({'detail': f'Failed to read docx file content: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                print(f"!!! Job Upload Error: Failed reading docx {file.name}: {e}")
+                return Response({'detail': f'Failed to read docx file content: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # 2. Parsează textul extras
+            # 2. Parse the extracted text
             print(f"Attempting to parse text for {file.name}...")
-            parsed_data = self._parse_job_description_text(full_text) # Apelează funcția corectată
-            parsed_data['content'] = full_text # Salvăm textul complet
+            parsed_data = self._parse_job_description_text(full_text)
+            parsed_data['content'] = full_text  # Save the full text
             print(f"Parsed Data for {file.name}: Title='{parsed_data.get('title')}', Industry='{parsed_data.get('industry')}', Skills Count={len(parsed_data.get('technical_skills', {}))}")
 
-            # 3. Verifică dacă titlul a fost parsat
+            # 3. Check if title was parsed
             if not parsed_data.get('title'):
-                 print(f"!!! Job Upload Error: Could not parse title for {file.name}.")
-                 # Returnează eroarea 400 specifică
-                 return Response({'detail': 'Could not parse job title from the document.'}, status=status.HTTP_400_BAD_REQUEST)
+                print(f"!!! Job Upload Error: Could not parse title for {file.name}.")
+                return Response({'detail': 'Could not parse job title from the document.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # 4. Creează sau actualizează obiectul JobDescription
+            # 4. Create or update JobDescription object with transaction
             print(f"Attempting to update or create JobDescription for '{parsed_data['title']}'...")
-            job, created = JobDescription.objects.update_or_create(
+            with transaction.atomic():
+                job, created = JobDescription.objects.update_or_create(
                 title=parsed_data['title'],
                 defaults={
                     'content': parsed_data['content'],
@@ -193,7 +195,7 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
             )
             print(f"JobDescription {'created' if created else 'updated'} with ID: {job.id}")
 
-            # 5. Serializează și returnează răspunsul
+            # 5. Serialize and return response
             serializer = self.get_serializer(job)
             status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
             print(f"Successfully processed job description {file.name}.")
@@ -201,8 +203,6 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             print(f"!!! Job Upload Error: General exception during processing {file.name}: {e}")
-            # import traceback
-            # traceback.print_exc() # pt debug
             return Response({'detail': f'Error processing job description file: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _parse_job_description_text(self, text):
