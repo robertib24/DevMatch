@@ -1,20 +1,89 @@
-<div class="flex flex-column margin-top-85">
-  <div class="flex justify-center margin-top-24">
-    <app-button
-      class="margin-right-20"
-      [label]="'Search CV'"
-      [width]="'265'"
-      [height]="'40'"
-      [type]="'primary'"
-      (click)="onClick()"
-    ></app-button>
+<div class="dashboard-container">
+  <header class="app-header">
+    <div class="logo">
+      <h1>CV Matcher</h1>
+    </div>
+    <div class="actions">
+      <button class="action-btn" routerLink="/upload-cv">Upload CV</button>
+      <button class="action-btn" routerLink="/upload-job">Upload Job</button>
+    </div>
+  </header>
 
-    <app-button
-      [label]="'Upload CV'"
-      [width]="'265'"
-      [height]="'40'"
-      [type]="'primary'"
-      (click)="onClick()"
-    ></app-button>
+  <div class="main-content">
+    <div class="card dashboard-card">
+      <h2>Find Top Candidates</h2>
+      <p>Select a job description to find the best matching candidates</p>
+      <div class="job-selector">
+        <select [(ngModel)]="selectedJob" (change)="loadMatchingCVs()">
+          <option [ngValue]="null">Select a job...</option>
+          <option *ngFor="let job of jobs" [ngValue]="job">{{job.title}}</option>
+        </select>
+        <button class="primary-btn" [disabled]="!selectedJob" (click)="loadMatchingCVs()">Find Candidates</button>
+      </div>
+    </div>
+
+    <div class="card dashboard-card" *ngIf="matchingCVs.length > 0">
+      <h2>Top Candidates for {{selectedJob?.title}}</h2>
+      <div class="candidates-list">
+        <div class="candidate-card" *ngFor="let match of matchingCVs; let i = index">
+          <div class="candidate-rank">{{i + 1}}</div>
+          <div class="candidate-info">
+            <h3>{{match.cv.name}}</h3>
+            <div class="score-summary">
+              <div class="score-item">
+                <span class="score-label">Overall Match:</span>
+                <span class="score-value">{{match.total_score * 100 | number:'1.0-0'}}%</span>
+              </div>
+            </div>
+            <div class="score-details">
+              <div class="score-bar">
+                <div class="score-bar-fill industry" [style.width]="(match.industry_score * 100) + '%'"></div>
+                <span class="score-bar-label">Industry: {{match.industry_score * 100 | number:'1.0-0'}}%</span>
+              </div>
+              <div class="score-bar">
+                <div class="score-bar-fill skills" [style.width]="(match.tech_skills_score * 100) + '%'"></div>
+                <span class="score-bar-label">Skills: {{match.tech_skills_score * 100 | number:'1.0-0'}}%</span>
+              </div>
+              <div class="score-bar">
+                <div class="score-bar-fill description" [style.width]="(match.description_match_score * 100) + '%'"></div>
+                <span class="score-bar-label">Description: {{match.description_match_score * 100 | number:'1.0-0'}}%</span>
+              </div>
+            </div>
+            <button class="view-btn" (click)="viewCandidateDetails(match)">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-container">
+      <div class="card stats-card">
+        <h3>System Statistics</h3>
+        <div class="stat-item">
+          <span class="stat-label">Total CVs:</span>
+          <span class="stat-value">{{statistics.totalCVs || 0}}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Jobs:</span>
+          <span class="stat-value">{{statistics.totalJobs || 0}}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Matches Performed:</span>
+          <span class="stat-value">{{statistics.totalMatches || 0}}</span>
+        </div>
+      </div>
+
+      <div class="card recent-card">
+        <h3>Recent Activities</h3>
+        <div class="activity-list" *ngIf="recentActivities.length > 0">
+          <div class="activity-item" *ngFor="let activity of recentActivities">
+            <span class="activity-time">{{activity.time | date:'short'}}</span>
+            <span class="activity-description">{{activity.description}}</span>
+          </div>
+        </div>
+        <div class="no-activities" *ngIf="recentActivities.length === 0">
+          No recent activities
+        </div>
+      </div>
+    </div>
   </div>
 </div>

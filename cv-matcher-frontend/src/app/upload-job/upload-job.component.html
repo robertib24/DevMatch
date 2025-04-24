@@ -1,0 +1,53 @@
+<div class="upload-container card">
+    <h2>Upload Job Description(s)</h2>
+    <p>Select one or more job description files (.docx format).</p>
+    <p class="warning">
+        <strong>Important:</strong> Ensure your .docx files are well-structured. The system will attempt to automatically extract Title, Industry, Skills, and Content. Backend processing is required for this to work.
+    </p>
+  
+    <div class="upload-form">
+      <label for="jobFileInput" class="file-label">Choose Files</label>
+      <input
+        id="jobFileInput"
+        type="file"
+        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        (change)="onFilesSelected($event)"
+        multiple
+        class="file-input"
+      >
+  
+      <button
+        class="upload-btn primary-btn"
+        (click)="onUploadMultipleJobs()"
+        [disabled]="selectedFiles.length === 0 || uploading">
+         {{ uploading ? 'Uploading...' : 'Upload Selected (' + selectedFiles.length + ')' }}
+      </button>
+    </div>
+  
+     <div *ngIf="selectedFiles.length > 0" class="file-list">
+      <h4>Selected Files:</h4>
+      <ul>
+        <li *ngFor="let file of selectedFiles">
+          <span>{{ file.name }}</span>
+          <span [ngSwitch]="uploadProgress[file.name]">
+              <span *ngSwitchCase="-1" class="status error"> (Error)</span>
+              <span *ngSwitchCase="100" class="status success"> (Processed)</span>
+              <span *ngSwitchCase="undefined" class="status pending"> (Pending)</span>
+              <span *ngSwitchDefault class="status progress">
+                  ({{ uploadProgress[file.name] ?? 0 }}%)
+              </span>
+          </span>
+        </li>
+      </ul>
+    </div>
+  
+    <div
+      *ngIf="submitMessage && !uploading"
+      class="upload-message"
+      [ngClass]="{'success': !isError, 'error': isError, 'info': !isError && !(submitMessage && submitMessage.toLowerCase().includes('complete')) && !(submitMessage && submitMessage.toLowerCase().includes('error'))}">
+      {{ submitMessage }}
+    </div>
+    <div *ngIf="uploading && submitMessage" class="upload-message info">
+        {{ submitMessage }}
+     </div>
+  </div>

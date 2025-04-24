@@ -1,0 +1,49 @@
+<div class="upload-container card">
+    <h2>Upload CV(s)</h2>
+    <p>Select one or more CV files (.docx format) to upload.</p>
+  
+    <div class="upload-form">
+      <label for="cvFileInput" class="file-label">Choose Files</label>
+      <input
+        id="cvFileInput"
+        type="file"
+        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        (change)="onFilesSelected($event)"
+        multiple
+        class="file-input"
+      >
+  
+      <button
+        class="upload-btn primary-btn"
+        (click)="onUploadMultiple()"
+        [disabled]="selectedFiles.length === 0 || uploading">
+        {{ uploading ? 'Uploading...' : 'Upload Selected (' + selectedFiles.length + ')' }}
+      </button>
+    </div>
+  
+    <div *ngIf="selectedFiles.length > 0" class="file-list">
+      <h4>Selected Files:</h4>
+      <ul>
+        <li *ngFor="let file of selectedFiles">
+          <span>{{ file.name }}</span>
+          <span [ngSwitch]="uploadProgress[file.name]">
+              <span *ngSwitchCase="-1" class="status error"> (Error)</span>
+              <span *ngSwitchCase="100" class="status success"> (Uploaded)</span>
+              <span *ngSwitchCase="undefined" class="status pending"> (Pending)</span>
+              <span *ngSwitchDefault class="status progress">
+                  ({{ uploadProgress[file.name] ?? 0 }}%) </span>
+          </span>
+        </li>
+      </ul>
+    </div>
+  
+    <div
+      *ngIf="uploadMessage && !uploading"
+      class="upload-message"
+      [ngClass]="{'success': !isError, 'error': isError, 'info': !isError && !(uploadMessage && uploadMessage.toLowerCase().includes('complete')) && !(uploadMessage && uploadMessage.toLowerCase().includes('error'))}">
+      {{ uploadMessage }}
+    </div>
+     <div *ngIf="uploading && uploadMessage" class="upload-message info">
+        {{ uploadMessage }}
+     </div>
+  </div>
