@@ -8,10 +8,9 @@ from .serializers import CVSerializer, JobDescriptionSerializer, MatchResultSeri
 from .gemini_utils import GeminiAI
 import os
 import re
-import docx # Necesită: pip install python-docx
+import docx
 from datetime import datetime
 
-# --- Clasa CVViewSet (Rămâne la fel ca în ultima versiune bună) ---
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
@@ -59,7 +58,6 @@ class CVViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def find_best_job(self, request, pk=None):
-        # ... (Codul din varianta anterioară bună) ...
         try:
             cv = self.get_object()
         except CV.DoesNotExist:
@@ -102,10 +100,8 @@ class CVViewSet(viewsets.ModelViewSet):
         results.sort(key=lambda x: x['total_score'], reverse=True)
         return Response(results[0] if results else {'message': 'No suitable match found.'}, status=status.HTTP_200_OK if results else status.HTTP_404_NOT_FOUND)
 
-# --- Funcția get_statistics (Rămâne la fel ca în ultima versiune bună) ---
 @api_view(['GET'])
 def get_statistics(request):
-    # ... (Codul din varianta anterioară bună) ...
     stats = {
         'totalCVs': CV.objects.count(), 'totalJobs': JobDescription.objects.count(),
         'totalMatches': MatchResult.objects.count(), 'recentActivity': []
@@ -140,11 +136,9 @@ def get_statistics(request):
     return Response(stats)
 
 
-# --- Clasa JobDescriptionViewSet (CU PARSARE TITLU CORECTATĂ) ---
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     queryset = JobDescription.objects.all()
     serializer_class = JobDescriptionSerializer
-    # parser_classes = (MultiPartParser, FormParser) # Poți decomenta dacă ai importat
 
     def create(self, request, *args, **kwargs):
         print("--- Entering JobDescriptionViewSet CREATE method ---")
@@ -311,7 +305,6 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def find_matching_cvs(self, request, pk=None):
-        # ... (Codul din varianta anterioară bună) ...
         try: job = self.get_object()
         except JobDescription.DoesNotExist: return Response({'message': 'Job not found.'}, status=status.HTTP_404_NOT_FOUND)
         cvs = CV.objects.all()
