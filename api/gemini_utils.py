@@ -6,7 +6,7 @@ import re
 class GeminiAI:
     def __init__(self):
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
     
     def process_cv_job_match(self, cv_text, job_description, job_industry, technical_skills):
         """Process a CV and job description match using Gemini."""

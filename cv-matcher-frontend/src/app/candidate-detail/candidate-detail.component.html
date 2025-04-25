@@ -1,0 +1,37 @@
+<div class="detail-container card">
+    <button (click)="goBack()" class="back-btn">&larr; Back to Dashboard</button>
+  
+    <div *ngIf="isLoading" class="loading-indicator">
+      Loading candidate details...
+    </div>
+  
+    <div *ngIf="errorMessage && !isLoading" class="error-message">
+      {{ errorMessage }}
+    </div>
+  
+    <div *ngIf="cv && !isLoading">
+      <h2>{{ cv.name }}</h2>
+  
+      <div class="metadata">
+        <span><strong>ID:</strong> {{ cv.id }}</span>
+        <span><strong>Processed:</strong> {{ cv.processed_at | date:'medium' }}</span>
+      </div>
+  
+      <div class="download-link" *ngIf="cv.file">
+          <a [href]="cv.file" target="_blank" rel="noopener noreferrer" class="action-btn download">
+              Download Original CV (.docx)
+          </a>
+          <small>(Opens in a new tab)</small>
+      </div>
+       <p *ngIf="!cv.file" class="warning">Original file URL not available.</p>
+  
+  
+      <h3>CV Content:</h3>
+      <pre class="cv-content">{{ cv.content }}</pre>
+      </div>
+  
+    <div *ngIf="!cv && !isLoading && !errorMessage">
+        Could not find details for this candidate.
+    </div>
+  
+  </div>

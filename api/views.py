@@ -6,6 +6,7 @@ from .models import CV, JobDescription, MatchResult
 from .serializers import CVSerializer, JobDescriptionSerializer, MatchResultSerializer
 from .gemini_utils import GeminiAI
 from django.db import transaction
+from django.utils import timezone
 import os
 import re
 import docx
@@ -88,7 +89,7 @@ class CVViewSet(viewsets.ModelViewSet):
                         'industry_score': match_result.get('industry_score', 0),
                         'tech_skills_score': match_result.get('tech_skills_score', 0),
                         'description_match_score': match_result.get('description_match_score', 0),
-                        'total_score': total_score, 'matched_at': datetime.now()
+                        'total_score': total_score, 'matched_at': timezone.now()
                     }
                 )
                 results.append({
@@ -186,8 +187,8 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
             print(f"Attempting to update or create JobDescription for '{parsed_data['title']}'...")
             with transaction.atomic():
                 job, created = JobDescription.objects.update_or_create(
-                title=parsed_data['title'],
-                defaults={
+                    title=parsed_data['title'],
+                    defaults={
                     'content': parsed_data['content'],
                     'industry': parsed_data['industry'],
                     'technical_skills': parsed_data['technical_skills']
@@ -334,7 +335,7 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                         'industry_score': match_result.get('industry_score', 0),
                         'tech_skills_score': match_result.get('tech_skills_score', 0),
                         'description_match_score': match_result.get('description_match_score', 0),
-                        'total_score': total_score, 'matched_at': datetime.now()
+                        'total_score': total_score, 'matched_at': timezone.now()
                     }
                 )
                 results.append({
