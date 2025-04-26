@@ -58,6 +58,7 @@ export class StartComponent implements OnInit {
   isLoadingStats: boolean = false;
   errorMessage: string | null = null;
 
+  // This should match your backend API URL
   private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient, private router: Router) { }
@@ -70,9 +71,17 @@ export class StartComponent implements OnInit {
   loadJobs(): void {
     this.isLoadingJobs = true;
     this.errorMessage = null;
-    this.http.get<Job[]>(`${this.apiUrl}/api/jobs/`).subscribe({
+    this.http.get<any>(`${this.apiUrl}/api/jobs/`).subscribe({
       next: (data) => {
-        this.jobs = data;
+        console.log('Jobs response:', data);
+        if (Array.isArray(data)) {
+          this.jobs = data;
+        } else if (data && Array.isArray(data.results)) {
+          this.jobs = data.results;
+        } else {
+          this.jobs = [];
+          console.error('Unexpected jobs data format:', data);
+        }
         this.isLoadingJobs = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -91,9 +100,17 @@ export class StartComponent implements OnInit {
     this.isLoadingCVs = true;
     this.errorMessage = null;
     this.matchingCVs = [];
-    this.http.get<MatchResult[]>(`${this.apiUrl}/api/jobs/${this.selectedJob.id}/find_matching_cvs/`).subscribe({
+    this.http.get<any>(`${this.apiUrl}/api/jobs/${this.selectedJob.id}/find_matching_cvs/`).subscribe({
       next: (data) => {
-        this.matchingCVs = data;
+        console.log('Matching CVs response:', data);
+        if (Array.isArray(data)) {
+          this.matchingCVs = data;
+        } else if (data && Array.isArray(data.results)) {
+          this.matchingCVs = data.results;
+        } else {
+          this.matchingCVs = [];
+          console.error('Unexpected matchingCVs data format:', data);
+        }
         this.isLoadingCVs = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -109,12 +126,18 @@ export class StartComponent implements OnInit {
     this.errorMessage = null;
     this.http.get<StatisticsResponse>(`${this.apiUrl}/api/statistics/`).subscribe({
       next: (data) => {
+        console.log('Statistics response:', data);
         this.statistics = {
           totalCVs: data.totalCVs,
           totalJobs: data.totalJobs,
           totalMatches: data.totalMatches
         };
-        this.recentActivities = data.recentActivity;
+        if (Array.isArray(data.recentActivity)) {
+          this.recentActivities = data.recentActivity;
+        } else {
+          this.recentActivities = [];
+          console.error('Unexpected recentActivity data format:', data.recentActivity);
+        }
         this.isLoadingStats = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -129,7 +152,7 @@ export class StartComponent implements OnInit {
 
   viewCandidateDetails(match: MatchResult): void {
     if (match?.cv?.id) {
-      this.router.navigate(['/candidate', match.cv.id]);
+      this.router.navigate(['/candidate-detail', match.cv.id]);
     } else {
       console.error("Cannot navigate: Invalid candidate data provided.", match);
       this.errorMessage = "Could not retrieve candidate details.";

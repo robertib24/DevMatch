@@ -14,7 +14,7 @@ def extract_text_from_docx(file_path):
 def setup_gemini():
     """Configure the Gemini API client."""
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    return genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
+    return genai.GenerativeModel('gemini-1.5-flash-latest')
 
 def get_industry_score(cv_text, job_industry):
     """Calculate industry match score (10%)."""
