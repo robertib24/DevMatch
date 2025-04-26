@@ -1,7 +1,7 @@
 <div class="dashboard-container">   
   <header class="app-header">     
     <div class="logo">       
-      <h1>CV Matcher</h1>     
+      <h1>Match CVs</h1>     
     </div>     
     <div class="actions">       
       <button class="action-btn" routerLink="/upload-cv">Upload CV</button>       
@@ -9,6 +9,40 @@
     </div>   
   </header>    
   
+  <!-- Navigation Cards Section -->
+  <div class="navigation-cards">
+    <div class="nav-card" routerLink="/cv-list">
+      <div class="nav-icon">
+        👨‍💼
+      </div>
+      <div class="nav-content">
+        <h3>View All CVs</h3>
+        <p>Browse and manage all candidate CVs</p>
+      </div>
+    </div>
+    
+    <div class="nav-card" routerLink="/job-list">
+      <div class="nav-icon">
+        💼
+      </div>
+      <div class="nav-content">
+        <h3>View All Jobs</h3>
+        <p>Browse and manage all job listings</p>
+      </div>
+    </div>
+    
+    <div class="nav-card" routerLink="/match-list">
+      <div class="nav-icon">
+        🔍
+      </div>
+      <div class="nav-content">
+        <h3>Match Results</h3>
+        <p>View all candidate-job match results</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rest of your existing Start component -->
   <div class="main-content">     
     <div class="card dashboard-card">       
       <h2>Find Top Candidates</h2>       
@@ -22,6 +56,7 @@
       </div>     
     </div>      
     
+    <!-- Candidates listing (keep this part the same) -->
     <div class="card dashboard-card" *ngIf="matchingCVs && matchingCVs.length > 0">       
       <h2>Top Candidates for {{selectedJob?.title}}</h2>       
       <div class="candidates-list">         

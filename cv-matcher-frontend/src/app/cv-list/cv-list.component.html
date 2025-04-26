@@ -1,1 +1,89 @@
-<p>cv-list works!</p>
+<div class="dashboard-container">
+  <header class="app-header">
+    <div class="logo">
+      <h1>CV List</h1>
+    </div>
+    <div class="actions">
+      <button class="action-btn" routerLink="/upload-cv">Upload CV</button>
+      <button class="action-btn" routerLink="/start">Back to Dashboard</button>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <div class="card">
+      <h2>All CVs</h2>
+      
+      <div *ngIf="loading" class="text-center">
+        <div class="spinner"></div>
+        <p>Loading CVs...</p>
+      </div>
+      
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{errorMessage}}
+      </div>
+      
+      <div *ngIf="!loading && !errorMessage && cvs.length === 0" class="no-data-message">
+        No CVs found. Upload some CVs to get started.
+      </div>
+      
+      <div *ngIf="!loading && cvs.length > 0" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Processed At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cv of cvs">
+              <td>{{ cv.id }}</td>
+              <td>{{ cv.name }}</td>
+              <td>{{ formatDate(cv.processed_at) }}</td>
+              <td class="actions-cell">
+                <button class="view-btn" (click)="viewCVDetails(cv)">
+                  View Details
+                </button>
+                <button class="view-btn" (click)="findBestJob(cv)">
+                  Find Best Job
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="totalPages > 1">
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage === 1"
+            (click)="goToPage(currentPage - 1)">
+            Previous
+          </button>
+          
+          <span class="page-indicator">
+            Page {{currentPage}} of {{totalPages}}
+          </span>
+          
+          <button 
+            class="pagination-btn" 
+            [disabled]="currentPage === totalPages"
+            (click)="goToPage(currentPage + 1)">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" *ngIf="loading">
+  <div class="loading-indicator">
+    <div class="spinner"></div>
+    <p>
+      <strong>Processing...</strong>
+    </p>
+    <small>Please wait</small>
+  </div>
+</div>

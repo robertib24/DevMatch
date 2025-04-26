@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters, pagination
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.core.files.uploadedfile import UploadedFile
@@ -10,11 +10,27 @@ from django.utils import timezone
 import os
 import re
 import docx
+import logging
 from datetime import datetime
 
+# Configure a logger for better debugging
+logger = logging.getLogger(__name__)
+
+# Add pagination for all viewsets
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+# Keep your original CVViewSet, just add pagination and filters
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'content']
+    ordering_fields = ['name', 'processed_at']
+    ordering = ['-processed_at']
 
     def create(self, request, *args, **kwargs):
         print("--- Entering CVViewSet CREATE method ---")
@@ -103,45 +119,15 @@ class CVViewSet(viewsets.ModelViewSet):
         results.sort(key=lambda x: x['total_score'], reverse=True)
         return Response(results[0] if results else {'message': 'No suitable match found.'}, status=status.HTTP_200_OK if results else status.HTTP_404_NOT_FOUND)
 
-@api_view(['GET'])
-def get_statistics(request):
-    stats = {
-        'totalCVs': CV.objects.count(), 'totalJobs': JobDescription.objects.count(),
-        'totalMatches': MatchResult.objects.count(), 'recentActivity': []
-    }
-    now = datetime.now()
-    try:
-        recent_cvs = CV.objects.order_by('-processed_at')[:5]
-        for cv in recent_cvs:
-            stats['recentActivity'].append({
-                'time': cv.processed_at or now, 'description': f'New CV uploaded: {cv.name or "N/A"}'
-            })
-    except Exception as e: print(f"Error fetching recent CVs: {e}")
-    try:
-        recent_jobs = JobDescription.objects.order_by('-created_at')[:5]
-        for job in recent_jobs:
-            stats['recentActivity'].append({
-                'time': job.created_at or now, 'description': f'New job added: {job.title or "N/A"}'
-            })
-    except Exception as e: print(f"Error fetching recent jobs: {e}")
-    try:
-        recent_matches = MatchResult.objects.select_related('cv', 'job').order_by('-matched_at')[:5]
-        for match in recent_matches:
-            cv_name = getattr(match.cv, 'name', "N/A")
-            job_title = getattr(match.job, 'title', "N/A")
-            stats['recentActivity'].append({
-                'time': match.matched_at or now,
-                'description': f'Matched CV {cv_name} with job {job_title} (Score: {int(match.total_score * 100)}%)'
-            })
-    except Exception as e: print(f"Error fetching recent matches: {e}")
-    stats['recentActivity'].sort(key=lambda x: x.get('time', datetime.min), reverse=True)
-    stats['recentActivity'] = stats['recentActivity'][:10]
-    return Response(stats)
-
-
+# Keep your original JobDescriptionViewSet, just add pagination and filters
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     queryset = JobDescription.objects.all()
     serializer_class = JobDescriptionSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'content', 'industry']
+    ordering_fields = ['title', 'industry', 'created_at']
+    ordering = ['-created_at']
 
     def create(self, request, *args, **kwargs):
         print("--- Entering JobDescriptionViewSet CREATE method ---")
@@ -218,28 +204,28 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
 
         print("--- Starting text parsing (V2) ---")
 
-        # Extrage Titlul (caută 'Job Title:' și ia linia următoare)
+        # Extract Title (look for 'Job Title:' and take the next line)
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             if line_stripped.lower().startswith("job title:"):
-                print(f"Found 'Job Title:' marker at line {i+1}") # Debug
-                # Caută următoarea linie ne-goală
+                print(f"Found 'Job Title:' marker at line {i+1}")
+                # Look for the next non-empty line
                 if i + 1 < len(lines):
                     next_line_stripped = lines[i+1].strip()
-                    if next_line_stripped: # Dacă linia următoare nu e goală
+                    if next_line_stripped:
                         data['title'] = next_line_stripped
-                        print(f"Found Title on next line: '{data['title']}'") # Debug
-                        break # Oprește căutarea după ce l-ai găsit
-        # Dacă nu am găsit titlul după marker, încercăm o heuristică (prima linie?)
+                        print(f"Found Title on next line: '{data['title']}'")
+                        break
+        # If we didn't find the title after marker, try a heuristic (first line?)
         if not data['title'] and lines:
              first_line = lines[0].strip()
-             # Considerăm prima linie titlu dacă nu e foarte lungă și nu e un header generic
+             # Consider the first line as title if it's not too long and not a generic header
              if len(first_line.split()) < 10 and not first_line.lower().startswith("company overview"):
-                   print(f"Using first line as fallback title: '{first_line}'") # Debug
+                   print(f"Using first line as fallback title: '{first_line}'")
                    data['title'] = first_line
 
 
-        # Extrage Industria (la fel ca înainte)
+        # Extract Industry
         for line in lines:
             line_stripped = line.strip()
             if line_stripped.lower().startswith("industry:"):
@@ -247,26 +233,26 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                  print(f"Found Industry: {data['industry']}")
                  break
 
-        # Extrage Skill-uri (la fel ca înainte)
+        # Extract Skills
         print("Scanning for skills sections...")
         for line in lines:
             line_stripped = line.strip()
             line_lower = line_stripped.lower()
 
-            # Detectare început secțiuni
+            # Detect section starts
             if line_lower.startswith("required qualifications") or \
                line_lower.startswith("qualifications:") or \
                line_lower.startswith("preferred skills") or \
                line_lower.startswith("skills:") or \
                line_lower.startswith("technical skills") or \
                line_lower.startswith("requirements"):
-                if not in_skills_section: # Doar dacă nu eram deja în secțiune
+                if not in_skills_section:
                     print(f"Entering potential skills section at line: '{line_stripped}'")
                     in_skills_section = True
-                continue # Trecem peste linia header
+                continue # Skip the header line
 
-            # Detectare sfârșit secțiuni / alte secțiuni majore
-            # Verificăm dacă SUNTEM în secțiune ÎNAINTE de a ieși
+            # Detect section ends / other major sections
+            # Check if we ARE in a section BEFORE exiting
             if in_skills_section and (
                line_lower.startswith("benefits:") or \
                line_lower.startswith("key responsibilities:") or \
@@ -277,16 +263,16 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                (line_stripped.endswith(':') and len(line_stripped.split()) < 5) ):
                  print(f"Exiting potential skills section at line: '{line_stripped}'")
                  in_skills_section = False
-                 # Nu continuăm aici, linia curentă nu mai face parte din skill-uri
+                 # Skip this line, it's part of a new section
 
-            # Adaugă skill dacă suntem în secțiune și linia pare validă
+            # Add skill if we are in a section and the line seems valid
             if in_skills_section and line_stripped:
                 skill_match = re.match(r'^[-*•\u2022\s]+(.*)', line_stripped)
                 skill = ""
                 if skill_match:
                     skill = skill_match.group(1).strip()
                 elif len(line_stripped.split()) < 15:
-                     # Heuristica pentru linii fără marcator, doar dacă nu par a fi titluri
+                     # Heuristic for lines without a marker, only if they don't appear to be titles
                      if not line_stripped.endswith(':'):
                           skill = line_stripped
 
@@ -295,7 +281,7 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                     if not (skill.endswith('.') or skill.endswith(':')):
                          potential_skills.append(skill)
 
-        # Procesează skill-urile
+        # Process skills
         unique_skills = sorted(list(set(potential_skills)))
         data['technical_skills'] = {skill: 100 for skill in unique_skills}
         print(f"Final parsed skills: {data['technical_skills']}")
@@ -349,3 +335,50 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         results.sort(key=lambda x: x['total_score'], reverse=True)
         top_5 = results[:5]
         return Response(top_5)
+
+class MatchResultViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing match results between CVs and job descriptions.
+    """
+    queryset = MatchResult.objects.all().select_related('cv', 'job').order_by('-matched_at')
+    serializer_class = MatchResultSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['cv__name', 'job__title']
+    ordering_fields = ['total_score', 'industry_score', 'tech_skills_score', 'description_match_score', 'matched_at']
+    ordering = ['-total_score']
+
+@api_view(['GET'])
+def get_statistics(request):
+    stats = {
+        'totalCVs': CV.objects.count(), 'totalJobs': JobDescription.objects.count(),
+        'totalMatches': MatchResult.objects.count(), 'recentActivity': []
+    }
+    now = datetime.now()
+    try:
+        recent_cvs = CV.objects.order_by('-processed_at')[:5]
+        for cv in recent_cvs:
+            stats['recentActivity'].append({
+                'time': cv.processed_at or now, 'description': f'New CV uploaded: {cv.name or "N/A"}'
+            })
+    except Exception as e: print(f"Error fetching recent CVs: {e}")
+    try:
+        recent_jobs = JobDescription.objects.order_by('-created_at')[:5]
+        for job in recent_jobs:
+            stats['recentActivity'].append({
+                'time': job.created_at or now, 'description': f'New job added: {job.title or "N/A"}'
+            })
+    except Exception as e: print(f"Error fetching recent jobs: {e}")
+    try:
+        recent_matches = MatchResult.objects.select_related('cv', 'job').order_by('-matched_at')[:5]
+        for match in recent_matches:
+            cv_name = getattr(match.cv, 'name', "N/A")
+            job_title = getattr(match.job, 'title', "N/A")
+            stats['recentActivity'].append({
+                'time': match.matched_at or now,
+                'description': f'Matched CV {cv_name} with job {job_title} (Score: {int(match.total_score * 100)}%)'
+            })
+    except Exception as e: print(f"Error fetching recent matches: {e}")
+    stats['recentActivity'].sort(key=lambda x: x.get('time', datetime.min), reverse=True)
+    stats['recentActivity'] = stats['recentActivity'][:10]
+    return Response(stats)
