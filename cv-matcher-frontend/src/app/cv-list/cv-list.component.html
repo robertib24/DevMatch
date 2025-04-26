@@ -1,57 +1,80 @@
 <div class="dashboard-container">
   <header class="app-header">
     <div class="logo">
-      <h1>CV List</h1>
+      <h1>Candidate CVs</h1>
     </div>
     <div class="actions">
-      <button class="action-btn" routerLink="/upload-cv">Upload CV</button>
       <button class="action-btn" routerLink="/start">Back to Dashboard</button>
+      <button class="action-btn" routerLink="/upload-cv">Upload New CV</button>
     </div>
   </header>
 
   <div class="main-content">
     <div class="card">
-      <h2>All CVs</h2>
+      <h2>All Candidates</h2>
       
-      <div *ngIf="loading" class="text-center">
+      <div *ngIf="isLoading" class="text-center">
         <div class="spinner"></div>
-        <p>Loading CVs...</p>
+        <p>Loading candidates...</p>
       </div>
       
       <div *ngIf="errorMessage" class="alert alert-danger">
         {{errorMessage}}
       </div>
       
-      <div *ngIf="!loading && !errorMessage && cvs.length === 0" class="no-data-message">
-        No CVs found. Upload some CVs to get started.
+      <div *ngIf="!isLoading && !errorMessage && cvs.length === 0" class="no-data-message">
+        No candidates found. Upload CVs to get started.
       </div>
       
-      <div *ngIf="!loading && cvs.length > 0" class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Processed At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let cv of cvs">
-              <td>{{ cv.id }}</td>
-              <td>{{ cv.name }}</td>
-              <td>{{ formatDate(cv.processed_at) }}</td>
-              <td class="actions-cell">
-                <button class="view-btn" (click)="viewCVDetails(cv)">
-                  View Details
-                </button>
-                <button class="view-btn" (click)="findBestJob(cv)">
-                  Find Best Job
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div *ngIf="!isLoading && cvs.length > 0">
+        <div class="sort-controls">
+          <div class="sort-buttons">
+            <button 
+              class="sort-btn" 
+              [class.active]="sortField === 'name'"
+              (click)="sortBy('name')">
+              Name {{getSortIcon('name')}}
+            </button>
+            <button 
+              class="sort-btn" 
+              [class.active]="sortField === 'processed_at'"
+              (click)="sortBy('processed_at')">
+              Date {{getSortIcon('processed_at')}}
+            </button>
+          </div>
+          
+          <div class="search-box">
+            <input 
+              type="text" 
+              [(ngModel)]="searchTerm" 
+              placeholder="Search CVs..." 
+              (keyup.enter)="search()">
+            <button class="search-btn" (click)="search()">Search</button>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Processed Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cv of cvs">
+                <td>{{cv.name}}</td>
+                <td>{{cv.processed_at | date:'medium'}}</td>
+                <td class="actions-cell">
+                  <button class="view-btn" [routerLink]="['/candidate-detail', cv.id]">View</button>
+                  <button class="view-btn" (click)="findBestJob(cv)">Find Best Job</button>
+                  <button class="delete-btn" (click)="deleteCV(cv)">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         
         <!-- Pagination -->
         <div class="pagination-container" *ngIf="totalPages > 1">
@@ -78,7 +101,7 @@
   </div>
 </div>
 
-<div class="loading-overlay" *ngIf="loading">
+<div class="loading-overlay" *ngIf="processingAction">
   <div class="loading-indicator">
     <div class="spinner"></div>
     <p>

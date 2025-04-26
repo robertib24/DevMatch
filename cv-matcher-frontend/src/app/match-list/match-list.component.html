@@ -1,147 +1,136 @@
-<div class="dashboard-container">
-    <header class="app-header">
-      <div class="logo">
-        <h1>Match Results</h1>
-      </div>
-      <div class="actions">
-        <button class="action-btn" routerLink="/start">Back to Dashboard</button>
-      </div>
-    </header>
-  
-    <div class="main-content">
-      <div class="card">
-        <h2>All Match Results</h2>
-        
-        <div *ngIf="loading" class="text-center">
-          <div class="spinner"></div>
-          <p>Loading match results...</p>
-        </div>
-        
-        <div *ngIf="errorMessage" class="alert alert-danger">
-          {{errorMessage}}
-        </div>
-        
-        <div *ngIf="!loading && !errorMessage && matches.length === 0" class="no-data-message">
-          No match results found. Find matches between CVs and jobs to get started.
-        </div>
-        
-        <div *ngIf="!loading && matches.length > 0">
-          <div class="sort-controls">
-            <div class="sort-label">Sort by:</div>
-            <div class="sort-buttons">
-              <button 
-                class="sort-btn" 
-                [class.active]="sortField === 'total_score'"
-                (click)="sortBy('total_score')">
-                Total Score {{getSortIcon('total_score')}}
-              </button>
-              <button 
-                class="sort-btn" 
-                [class.active]="sortField === 'industry_score'"
-                (click)="sortBy('industry_score')">
-                Industry Score {{getSortIcon('industry_score')}}
-              </button>
-              <button 
-                class="sort-btn" 
-                [class.active]="sortField === 'tech_skills_score'"
-                (click)="sortBy('tech_skills_score')">
-                Tech Skills {{getSortIcon('tech_skills_score')}}
-              </button>
-              <button 
-                class="sort-btn" 
-                [class.active]="sortField === 'matched_at'"
-                (click)="sortBy('matched_at')">
-                Date {{getSortIcon('matched_at')}}
-              </button>
-            </div>
-          </div>
-          
-          <div class="match-cards">
-            <div class="match-card" *ngFor="let match of matches">
-              <div class="match-header">
-                <div class="match-score" [ngClass]="getScoreClass(match.total_score)">
-                  {{formatScore(match.total_score)}}
-                </div>
-                <div class="match-date">
-                  {{formatDate(match.matched_at)}}
-                </div>
-              </div>
-              
-              <div class="match-body">
-                <div class="match-entity">
-                  <div class="entity-label">Candidate:</div>
-                  <div class="entity-value">
-                    <a (click)="viewCVDetails(match.cv.id)">{{match.cv.name}}</a>
-                  </div>
-                </div>
-                
-                <div class="match-entity">
-                  <div class="entity-label">Job:</div>
-                  <div class="entity-value">
-                    <a (click)="viewJobDetails(match.job.id)">{{match.job.title}}</a>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="match-scores">
-                <div class="score-bar">
-                  <div class="score-bar-label">Industry Match</div>
-                  <div class="score-bar-container">
-                    <div class="score-bar-fill industry" [style.width]="formatScore(match.industry_score)"></div>
-                    <div class="score-bar-value">{{formatScore(match.industry_score)}}</div>
-                  </div>
-                </div>
-                
-                <div class="score-bar">
-                  <div class="score-bar-label">Skills Match</div>
-                  <div class="score-bar-container">
-                    <div class="score-bar-fill skills" [style.width]="formatScore(match.tech_skills_score)"></div>
-                    <div class="score-bar-value">{{formatScore(match.tech_skills_score)}}</div>
-                  </div>
-                </div>
-                
-                <div class="score-bar">
-                  <div class="score-bar-label">Description Match</div>
-                  <div class="score-bar-container">
-                    <div class="score-bar-fill description" [style.width]="formatScore(match.description_match_score)"></div>
-                    <div class="score-bar-value">{{formatScore(match.description_match_score)}}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Pagination -->
-          <div class="pagination-container" *ngIf="totalPages > 1">
-            <button 
-              class="pagination-btn" 
-              [disabled]="currentPage === 1"
-              (click)="goToPage(currentPage - 1)">
-              Previous
-            </button>
-            
-            <span class="page-indicator">
-              Page {{currentPage}} of {{totalPages}}
-            </span>
-            
-            <button 
-              class="pagination-btn" 
-              [disabled]="currentPage === totalPages"
-              (click)="goToPage(currentPage + 1)">
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="loading-overlay" *ngIf="loading">
-    <div class="loading-indicator">
+<div class="content-container">
+  <div class="card">
+    <h2>All Match Results</h2>
+    
+    <div *ngIf="loading" class="text-center">
       <div class="spinner"></div>
-      <p>
-        <strong>Processing...</strong>
-      </p>
-      <small>Please wait</small>
+      <p>Loading match results...</p>
+    </div>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{errorMessage}}
+    </div>
+    
+    <div *ngIf="!loading && !errorMessage && matches.length === 0" class="no-data-message">
+      No match results found. Find matches between CVs and jobs to get started.
+    </div>
+    
+    <div *ngIf="!loading && matches.length > 0">
+      <div class="sort-controls">
+        <div class="sort-label">Sort by:</div>
+        <div class="sort-buttons">
+          <button 
+            class="sort-btn" 
+            [class.active]="sortField === 'total_score'"
+            (click)="sortBy('total_score')">
+            Total Score {{getSortIcon('total_score')}}
+          </button>
+          <button 
+            class="sort-btn" 
+            [class.active]="sortField === 'industry_score'"
+            (click)="sortBy('industry_score')">
+            Industry Score {{getSortIcon('industry_score')}}
+          </button>
+          <button 
+            class="sort-btn" 
+            [class.active]="sortField === 'tech_skills_score'"
+            (click)="sortBy('tech_skills_score')">
+            Tech Skills {{getSortIcon('tech_skills_score')}}
+          </button>
+          <button 
+            class="sort-btn" 
+            [class.active]="sortField === 'matched_at'"
+            (click)="sortBy('matched_at')">
+            Date {{getSortIcon('matched_at')}}
+          </button>
+        </div>
+      </div>
+      
+      <div class="match-cards">
+        <div class="match-card" *ngFor="let match of matches">
+          <div class="match-header">
+            <div class="match-score" [class]="getScoreClass(match.total_score)">
+              {{formatScore(match.total_score)}}
+            </div>
+            <div class="match-date">
+              {{formatDate(match.matched_at)}}
+            </div>
+          </div>
+          
+          <div class="match-body">
+            <div class="match-entity">
+              <div class="entity-label">Candidate:</div>
+              <div class="entity-value">
+                <a (click)="viewCVDetails(match.cv.id)">{{match.cv.name}}</a>
+              </div>
+            </div>
+            
+            <div class="match-entity">
+              <div class="entity-label">Job:</div>
+              <div class="entity-value">
+                <a (click)="viewJobDetails(match.job.id)">{{match.job.title}}</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="match-scores">
+            <div class="score-bar">
+              <div class="score-bar-label">Industry Match</div>
+              <div class="score-bar-container">
+                <div class="score-bar-fill industry" [style.width]="formatScore(match.industry_score)"></div>
+                <div class="score-bar-value">{{formatScore(match.industry_score)}}</div>
+              </div>
+            </div>
+            
+            <div class="score-bar">
+              <div class="score-bar-label">Skills Match</div>
+              <div class="score-bar-container">
+                <div class="score-bar-fill skills" [style.width]="formatScore(match.tech_skills_score)"></div>
+                <div class="score-bar-value">{{formatScore(match.tech_skills_score)}}</div>
+              </div>
+            </div>
+            
+            <div class="score-bar">
+              <div class="score-bar-label">Description Match</div>
+              <div class="score-bar-container">
+                <div class="score-bar-fill description" [style.width]="formatScore(match.description_match_score)"></div>
+                <div class="score-bar-value">{{formatScore(match.description_match_score)}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="totalPages > 1">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)">
+          Previous
+        </button>
+        
+        <span class="page-indicator">
+          Page {{currentPage}} of {{totalPages}}
+        </span>
+        
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)">
+          Next
+        </button>
+      </div>
     </div>
   </div>
+</div>
+
+<div class="loading-overlay" *ngIf="loading">
+  <div class="loading-indicator">
+    <div class="spinner"></div>
+    <p>
+      <strong>Processing...</strong>
+    </p>
+    <small>Please wait</small>
+  </div>
+</div>
