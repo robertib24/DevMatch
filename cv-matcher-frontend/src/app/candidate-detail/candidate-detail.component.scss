@@ -1,145 +1,135 @@
-// Stiluri de bază pentru container și elemente
+@import "../../../src/styles/variables.scss";
+
 .detail-container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 25px;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 25px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+  color: $color-primary-dark;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  font-size: 1.8rem;
+}
+
+h3 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  color: $color-primary;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.metadata {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: $color-grey-2;
+  margin-bottom: 20px;
+
+  span {
+    display: inline-block;
   }
-  
-  h2 {
-    color: #333;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
+
+  strong {
+    color: $color-grey-1;
+    font-weight: 600;
   }
-  
-  h3 {
-      margin-top: 25px;
-      margin-bottom: 10px;
-      color: #555;
-      font-size: 1.1rem;
+}
+
+.download-link {
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  small {
+    font-size: 0.8rem;
+    color: $color-grey-2;
   }
+}
+
+// Styled CV content section - critical for proper content display
+.cv-content {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 10px;
   
-  .metadata {
-    display: flex;
-    gap: 20px; /* Spațiu între elemente */
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 20px;
-  
-    span {
-      display: inline-block; // Asigură alinierea corectă
-    }
-  
-    strong {
-      color: #444;
-    }
+  // Ensure proper formatting of CV content
+  p {
+    margin: 0;
+    line-height: 1.6;
+    color: $color-grey-1;
+    font-size: 0.95rem;
+    white-space: pre-wrap; // This preserves formatting but allows wrapping
   }
-  
-  .download-link {
-      margin-bottom: 25px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-  
-      small {
-          font-size: 0.8rem;
-          color: #777;
-      }
+}
+
+.warning {
+  background-color: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 10px 0 20px 0;
+  font-size: 0.9rem;
+}
+
+.back-btn {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  color: $color-grey-2;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: #f0f0f0;
+    color: $color-grey-1;
   }
-  
-  // Stil pentru afișarea conținutului CV-ului
-  .cv-content {
-    background-color: #f9f9f9;
-    border: 1px solid #eee;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 30px;
+  color: $color-grey-2;
+  font-style: italic;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border: 1px solid #ef9a9a;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.action-btn {
+  &.download {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
     border-radius: 4px;
-    padding: 15px;
-    white-space: pre-wrap; // Păstrează spațiile și liniile noi
-    word-wrap: break-word; // Împarte cuvintele lungi
-    max-height: 60vh; // Limitează înălțimea pentru a evita pagini prea lungi
-    overflow-y: auto; // Adaugă scroll vertical dacă e necesar
-    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; // Font monospace pentru lizibilitate
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  
-  // Butonul Înapoi
-  .back-btn {
-    background-color: transparent;
-    border: 1px solid #ccc;
-    color: #555;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-bottom: 20px;
-    font-size: 0.9rem;
-    transition: background-color 0.2s, color 0.2s;
-  
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    
     &:hover {
-      background-color: #f0f0f0;
-      color: #333;
+      background-color: #388E3C;
     }
   }
-  
-  // Indicatoare și mesaje (pot fi refolosite din alte componente)
-  .loading-indicator {
-    text-align: center;
-    padding: 30px;
-    color: #666;
-    font-style: italic;
-  }
-  
-  .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 15px;
-    border: 1px solid #ef9a9a;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  
-  .warning {
-      background-color: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffcc80;
-      padding: 10px 15px;
-      border-radius: 4px;
-      margin: 10px 0 20px 0;
-      font-size: 0.9rem;
-  }
-  
-  // Stiluri comune card / butoane acțiune (dacă nu sunt globale)
-  .card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-  
-  .action-btn { // Stilizare generală pentru butoanele de acțiune
-      background-color: #0288d1;
-      color: white;
-      border: none;
-      padding: 8px 16px; // Ajustat padding
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 500;
-      text-decoration: none; // Pentru link-uri stilizate ca butoane
-      display: inline-block; // Pentru aliniere corectă
-      transition: background-color 0.3s;
-  
-      &.download { // Stil specific pentru buton download
-          background-color: #4CAF50; // Verde
-          &:hover {
-               background-color: #388E3C;
-          }
-      }
-  
-      &:disabled {
-        background-color: #b0bec5;
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
-       &:hover:not(:disabled) {
-         background-color: #015f92; // Default hover
-       }
-    }
+}

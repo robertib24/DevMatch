@@ -1,29 +1,28 @@
-<div class="dashboard-container">
-  <header class="page-header">
+<div class="job-list-container">
+  <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Job Listings</h1>
       <p class="page-description">Manage your job postings and find matching candidates</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-outlined" routerLink="/start">
-        <i class="icon fas fa-arrow-left"></i> Dashboard
-      </button>
       <button class="btn btn-primary" routerLink="/upload-job">
-        <i class="icon fas fa-plus"></i> Add New Job
+        <i class="icon">📝</i> Add New Job
+      </button>
+      <button class="btn btn-outlined" routerLink="/start">
+        <i class="icon">↩</i> Back to Dashboard
       </button>
     </div>
-  </header>
+  </div>
 
   <div class="content-card">
     <div class="card-header">
       <h2 class="card-title">All Job Descriptions</h2>
-      
       <div class="view-toggle">
-        <button class="view-toggle-btn active">
-          <i class="icon fas fa-th-large"></i> Grid
+        <button class="view-toggle-btn" [class.active]="viewMode === 'grid'" (click)="toggleViewMode('grid')">
+          <i class="icon">🗂️</i> Grid View
         </button>
-        <button class="view-toggle-btn">
-          <i class="icon fas fa-list"></i> List
+        <button class="view-toggle-btn" [class.active]="viewMode === 'list'" (click)="toggleViewMode('list')">
+          <i class="icon">📋</i> List View
         </button>
       </div>
     </div>
@@ -38,14 +37,12 @@
     </div>
     
     <div *ngIf="!isLoading && !errorMessage && jobs.length === 0" class="empty-state">
-      <div class="empty-state-icon">
-        <i class="fas fa-clipboard-list"></i>
-      </div>
+      <div class="empty-state-icon">📋</div>
       <h3>No Jobs Found</h3>
       <p>Start by adding job descriptions to your dashboard.</p>
       <div class="empty-state-actions">
         <button class="btn btn-primary" routerLink="/upload-job">
-          <i class="icon fas fa-plus"></i> Add Job Description
+          <i class="icon">📝</i> Add Job Description
         </button>
       </div>
     </div>
@@ -83,12 +80,13 @@
             placeholder="Search jobs..." 
             (keyup.enter)="search()">
           <button class="search-btn" (click)="search()">
-            <i class="fas fa-search"></i>
+            <i class="icon">🔍</i>
           </button>
         </div>
       </div>
       
-      <div class="job-cards">
+      <!-- Grid View Mode -->
+      <div class="job-cards" *ngIf="viewMode === 'grid'">
         <div class="job-card" *ngFor="let job of jobs">
           <div class="job-header">
             <h3 class="job-title">{{job.title}}</h3>
@@ -105,25 +103,103 @@
                 <span class="skill-tag more" *ngIf="getSkillsCount(job.technical_skills) > 3">+{{getSkillsCount(job.technical_skills) - 3}} more</span>
               </div>
             </div>
+            
+            <!-- Top Candidates section -->
+            <div class="top-candidates-section">
+              <button class="top-candidates-toggle" (click)="toggleTopCandidates(job, $event)">
+                <i class="icon">{{showTopCandidates[job.id] ? '👇' : '👆'}}</i> 
+                {{showTopCandidates[job.id] ? 'Hide Top Candidates' : 'Show Top Candidates'}}
+              </button>
+              
+              <div class="top-candidates-list" *ngIf="showTopCandidates[job.id]">
+                <div *ngIf="!job.topCandidates || job.topCandidates.length === 0" class="no-candidates">
+                  No matching candidates found for this job.
+                </div>
+                
+                <div *ngIf="job.topCandidates && job.topCandidates.length > 0" class="candidates-wrapper">
+                  <h4 class="candidates-title">Top Matching Candidates:</h4>
+                  
+                  <div class="candidate-item" *ngFor="let match of job.topCandidates; let i = index">
+                    <div class="candidate-rank">{{i + 1}}</div>
+                    <div class="candidate-info">
+                      <div class="candidate-name">{{match.cv.name}}</div>
+                      <div class="candidate-score">
+                        <div class="score-bar">
+                          <div class="score-bar-fill" [style.width]="getScoreWidth(match.total_score)" 
+                               [ngClass]="getScoreClass(match.total_score)"></div>
+                          <span class="score-value">{{getScorePercentage(match.total_score)}}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button [routerLink]="['/candidate-detail', match.cv.id]" class="view-candidate">
+                      <i class="icon">👁️</i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="job-footer">
             <span class="job-date">
-              <i class="fas fa-calendar-alt"></i> {{job.created_at | date:'MMM d, y'}}
+              <i class="icon">📅</i> {{job.created_at | date:'MMM d, y'}}
             </span>
             <div class="job-actions">
-              <button class="btn btn-icon" title="View Details" (click)="showJobDetails(job)">
-                <i class="fas fa-eye"></i>
+              <button class="action-btn view" title="View Details" (click)="showJobDetails(job)">
+                <i class="icon">👁️</i>
               </button>
-              <button class="btn btn-icon" title="Find Matching CVs" (click)="findMatchingCVs(job)">
-                <i class="fas fa-users"></i>
+              <button class="action-btn match" title="Find Matching CVs" (click)="findMatchingCVs(job)">
+                <i class="icon">🔍</i>
               </button>
-              <button class="btn btn-icon" title="Delete Job" (click)="deleteJob(job)">
-                <i class="fas fa-trash-alt"></i>
+              <button class="action-btn delete" title="Delete Job" (click)="deleteJob(job)">
+                <i class="icon">🗑️</i>
               </button>
             </div>
           </div>
         </div>
+      </div>
+      
+      <!-- List View Mode -->
+      <div class="jobs-table-container" *ngIf="viewMode === 'list'">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Industry</th>
+              <th>Skills</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let job of jobs">
+              <td class="job-title-cell">{{job.title}}</td>
+              <td>{{job.industry}}</td>
+              <td>
+                <div class="table-skills" *ngIf="getSkillsCount(job.technical_skills) > 0">
+                  <span class="skill-tag" *ngFor="let skill of getTopSkills(job.technical_skills, 2)">{{skill}}</span>
+                  <span class="skill-tag more" *ngIf="getSkillsCount(job.technical_skills) > 2">+{{getSkillsCount(job.technical_skills) - 2}}</span>
+                </div>
+                <span *ngIf="getSkillsCount(job.technical_skills) === 0">No skills specified</span>
+              </td>
+              <td>{{job.created_at | date:'MMM d, y'}}</td>
+              <td class="actions-cell">
+                <button class="table-action-btn view" title="View Details" (click)="showJobDetails(job)">
+                  <i class="icon">👁️</i>
+                </button>
+                <button class="table-action-btn match" title="Find Matching CVs" (click)="findMatchingCVs(job)">
+                  <i class="icon">🔍</i>
+                </button>
+                <button class="table-action-btn top" title="Top Candidates" (click)="toggleTopCandidates(job, $event)">
+                  <i class="icon">👥</i>
+                </button>
+                <button class="table-action-btn delete" title="Delete Job" (click)="deleteJob(job)">
+                  <i class="icon">🗑️</i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       
       <!-- Pagination -->
@@ -132,7 +208,7 @@
           class="pagination-btn" 
           [disabled]="currentPage === 1"
           (click)="goToPage(currentPage - 1)">
-          <i class="fas fa-chevron-left"></i> Previous
+          <i class="icon">◀</i> Previous
         </button>
         
         <div class="page-numbers">
@@ -149,7 +225,7 @@
           class="pagination-btn" 
           [disabled]="currentPage === totalPages"
           (click)="goToPage(currentPage + 1)">
-          Next <i class="fas fa-chevron-right"></i>
+          Next <i class="icon">▶</i>
         </button>
       </div>
     </div>
@@ -163,7 +239,7 @@
       <div class="modal-header">
         <h3 class="modal-title">{{selectedJob?.title}}</h3>
         <button class="btn-close" (click)="closeJobDetail()">
-          <i class="fas fa-times"></i>
+          <i class="icon">✖</i>
         </button>
       </div>
       <div class="modal-body">
@@ -210,14 +286,12 @@
       <div class="modal-header">
         <h3 class="modal-title">Matching Candidates for: {{selectedJob?.title}}</h3>
         <button class="btn-close" (click)="closeMatchesModal()">
-          <i class="fas fa-times"></i>
+          <i class="icon">✖</i>
         </button>
       </div>
       <div class="modal-body">
         <div *ngIf="!matchResults || matchResults.length === 0" class="empty-state">
-          <div class="empty-state-icon">
-            <i class="fas fa-user-slash"></i>
-          </div>
+          <div class="empty-state-icon">👤</div>
           <h3>No Matching Candidates</h3>
           <p>No candidates match this job description's requirements.</p>
         </div>
@@ -266,7 +340,7 @@
               </div>
               
               <div class="match-actions">
-                <button class="btn btn-primary" [routerLink]="['/candidate-detail', match.cv.id]">
+                <button class="btn btn-primary" [routerLink]="['/candidate-detail', match.cv.id]" (click)="closeMatchesModal()">
                   View Candidate
                 </button>
               </div>

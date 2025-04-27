@@ -187,6 +187,32 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"!!! Job Upload Error: General exception during processing {file.name}: {e}")
             return Response({'detail': f'Error processing job description file: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=True, methods=['get'])
+    def top_candidates(self, request, pk=None):
+        """Get top 5 candidates for a specific job"""
+        try: 
+            job = self.get_object()
+        except JobDescription.DoesNotExist: 
+            return Response({'message': 'Job not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get the top 5 matches for this job
+        top_matches = MatchResult.objects.filter(job=job).order_by('-total_score')[:5]
+    
+        if not top_matches:
+            return Response([], status=status.HTTP_200_OK)
+        
+        results = []
+        for match in top_matches:
+            results.append({
+                'cv': CVSerializer(match.cv).data,
+                'total_score': match.total_score,
+                'industry_score': match.industry_score,
+                'tech_skills_score': match.tech_skills_score,
+                'description_match_score': match.description_match_score
+            })
+    
+        return Response(results, status=status.HTTP_200_OK)
 
     def _parse_job_description_text(self, text):
         data = {
@@ -378,3 +404,28 @@ def get_statistics(request):
     stats['recentActivity'].sort(key=lambda x: x.get('time', datetime.min), reverse=True)
     stats['recentActivity'] = stats['recentActivity'][:10]
     return Response(stats)
+
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 15 
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class MatchResultViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing match results between CVs and job descriptions.
+    """
+    # Remove select_related to ensure it doesn't limit results
+    queryset = MatchResult.objects.all().order_by('-total_score')
+    serializer_class = MatchResultSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['cv__name', 'job__title']
+    ordering_fields = ['total_score', 'industry_score', 'tech_skills_score', 'description_match_score', 'matched_at']
+    ordering = ['-total_score']
+
+    def get_queryset(self):
+        """
+        Return all match results without any filtering.
+        """
+        # Return all matches, make sure pagination works correctly
+        return MatchResult.objects.all().select_related('cv', 'job').order_by('-total_score')

@@ -5,6 +5,7 @@ import { UploadJobComponent } from './upload-job/upload-job.component';
 import { CvListComponent } from './cv-list/cv-list.component';
 import { JobListComponent } from './job-list/job-list.component';
 import { MatchListComponent } from './match-list/match-list.component';
+import { CandidateDetailComponent } from './candidate-detail/candidate-detail.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/start', pathMatch: 'full' },
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'cv-list', component: CvListComponent },
   { path: 'job-list', component: JobListComponent },
   { path: 'match-list', component: MatchListComponent },
+  { path: 'candidate-detail/:id', component: CandidateDetailComponent },
   { path: '**', redirectTo: '/start' }
 ];

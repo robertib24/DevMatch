@@ -11,6 +11,7 @@ interface Job {
   industry: string;
   technical_skills: Record<string, number>;
   created_at: string;
+  topCandidates?: MatchResult[]; // Property for top candidates
 }
 
 interface MatchResult {
@@ -53,6 +54,12 @@ export class JobListComponent implements OnInit {
   selectedJob: Job | null = null;
   matchResults: MatchResult[] = [];
   
+  // Display modes
+  viewMode: 'grid' | 'list' = 'grid';
+  
+  // Show top candidates flags for each job
+  showTopCandidates: Record<number, boolean> = {};
+  
   private apiUrl = 'http://localhost:8000';
   
   constructor(
@@ -62,6 +69,10 @@ export class JobListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadJobs();
+  }
+  
+  toggleViewMode(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
   }
 
   loadJobs(page: number = 1): void {
@@ -96,6 +107,11 @@ export class JobListComponent implements OnInit {
           this.jobs = [];
           console.error('Unexpected jobs data format:', response);
         }
+        
+        // Initialize top candidates display state
+        this.jobs.forEach(job => {
+          this.showTopCandidates[job.id] = false;
+        });
         
         this.isLoading = false;
       },
@@ -185,6 +201,36 @@ export class JobListComponent implements OnInit {
         console.error('Error finding matching CVs:', err);
         this.processingAction = false;
         this.errorMessage = 'Error finding matching candidates. Please try again.';
+      }
+    });
+  }
+
+  toggleTopCandidates(job: Job, event?: Event): void {
+    if (event) {
+      event.stopPropagation(); // Prevent other click handlers
+    }
+    
+    // If we already have the top candidates for this job, just toggle visibility
+    if (job.topCandidates) {
+      this.showTopCandidates[job.id] = !this.showTopCandidates[job.id];
+      return;
+    }
+    
+    // Otherwise fetch top candidates
+    this.processingAction = true;
+    
+    this.http.get<MatchResult[]>(`${this.apiUrl}/api/jobs/${job.id}/top_candidates/`).subscribe({
+      next: (response) => {
+        job.topCandidates = response;
+        this.showTopCandidates[job.id] = true;
+        this.processingAction = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error fetching top candidates:', err);
+        this.processingAction = false;
+        // Create an empty array to prevent repeated failed requests
+        job.topCandidates = [];
+        this.showTopCandidates[job.id] = true;
       }
     });
   }

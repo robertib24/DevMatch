@@ -38,7 +38,7 @@ export class MatchListComponent implements OnInit {
   // Pagination properties
   currentPage = 1;
   totalPages = 1;
-  itemsPerPage = 9;
+  itemsPerPage = 25; // Increased from 9 to 25
   
   // Sorting properties
   sortField = 'total_score';
@@ -69,7 +69,9 @@ export class MatchListComponent implements OnInit {
     
     const ordering = this.sortDirection === 'desc' ? `-${this.sortField}` : this.sortField;
     let params = new HttpParams()
-      .set('ordering', ordering);
+      .set('ordering', ordering)
+      .set('page_size', this.itemsPerPage.toString())
+      .set('page', this.currentPage.toString());
     
     if (this.searchTerm) {
       params = params.set('search', this.searchTerm);
@@ -90,7 +92,7 @@ export class MatchListComponent implements OnInit {
         }
         
         // Apply filtering
-        this.applyFiltersAndPagination();
+        this.filteredMatches = this.matches;
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -101,35 +103,10 @@ export class MatchListComponent implements OnInit {
     });
   }
 
-  applyFiltersAndPagination(): void {
-    // Apply search filter
-    let filtered = this.matches;
-    
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(match => 
-        match.cv.name.toLowerCase().includes(term) ||
-        match.job.title.toLowerCase().includes(term)
-      );
-    }
-    
-    // Apply pagination
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, filtered.length);
-    
-    this.filteredMatches = filtered.slice(startIndex, endIndex);
-    this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
-    
-    // Ensure current page is valid
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.goToPage(this.totalPages);
-    }
-  }
-
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.applyFiltersAndPagination();
+      this.loadMatches();
     }
   }
 
@@ -142,38 +119,9 @@ export class MatchListComponent implements OnInit {
       this.sortDirection = 'desc'; // Default to descending for new sort field
     }
     
-    // If we're using server-side sorting, reload data
+    // Reload data with new sorting
+    this.currentPage = 1; // Reset to first page
     this.loadMatches();
-    
-    // If we're using client-side sorting, sort the current data
-    // this.sortMatches();
-  }
-
-  sortMatches(): void {
-    const multiplier = this.sortDirection === 'asc' ? 1 : -1;
-    
-    this.matches.sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
-      
-      if (this.sortField === 'matched_at') {
-        valueA = new Date(a.matched_at).getTime();
-        valueB = new Date(b.matched_at).getTime();
-      } else {
-        valueA = a[this.sortField as keyof MatchResult];
-        valueB = b[this.sortField as keyof MatchResult];
-      }
-      
-      if (valueA < valueB) {
-        return -1 * multiplier;
-      } else if (valueA > valueB) {
-        return 1 * multiplier;
-      } else {
-        return 0;
-      }
-    });
-    
-    this.applyFiltersAndPagination();
   }
 
   getSortIcon(field: string): string {

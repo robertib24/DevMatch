@@ -87,6 +87,33 @@ export class CvListComponent implements OnInit {
     });
   }
 
+  getPageNumbers(): number[] {
+    const pageNumbers: number[] = [];
+    const totalPagesToShow = 5;
+    
+    if (this.totalPages <= totalPagesToShow) {
+      // Show all pages if there are few
+      for (let i = 1; i <= this.totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Show a subset of pages with current page in the middle
+      let startPage = Math.max(this.currentPage - Math.floor(totalPagesToShow / 2), 1);
+      let endPage = startPage + totalPagesToShow - 1;
+      
+      if (endPage > this.totalPages) {
+        endPage = this.totalPages;
+        startPage = Math.max(endPage - totalPagesToShow + 1, 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+    }
+    
+    return pageNumbers;
+  }
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.loadCVs(page);

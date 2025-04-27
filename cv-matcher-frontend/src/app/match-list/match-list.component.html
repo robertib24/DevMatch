@@ -1,5 +1,5 @@
-<div class="dashboard-container">
-  <header class="page-header">
+<div class="match-list-container">
+  <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Match Results</h1>
       <p class="page-description">View and analyze matching results between CVs and job descriptions</p>
@@ -12,17 +12,17 @@
         <i class="icon">↓</i> Export Results
       </button>
     </div>
-  </header>
+  </div>
 
   <div class="content-card">
     <div class="card-header">
       <h2 class="card-title">All Match Results</h2>
       <div class="view-toggle">
         <button class="view-toggle-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
-          <i class="icon">☰</i> Grid
+          <i class="icon">☰</i> Grid View
         </button>
         <button class="view-toggle-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
-          <i class="icon">☱</i> List
+          <i class="icon">☱</i> List View
         </button>
       </div>
     </div>
@@ -145,11 +145,8 @@
           </div>
           
           <div class="match-actions">
-            <button class="btn btn-sm btn-outlined" [routerLink]="['/candidate-detail', match.cv.id]">
+            <button class="btn btn-sm btn-primary" [routerLink]="['/candidate-detail', match.cv.id]">
               View CV
-            </button>
-            <button class="btn btn-sm btn-outlined" (click)="viewJobDetails(match.job.id)">
-              View Job
             </button>
           </div>
         </div>
@@ -195,9 +192,6 @@
           <div class="row-actions">
             <button class="btn btn-icon" [routerLink]="['/candidate-detail', match.cv.id]" title="View CV">
               <i class="icon">👤</i>
-            </button>
-            <button class="btn btn-icon" (click)="viewJobDetails(match.job.id)" title="View Job">
-              <i class="icon">💼</i>
             </button>
           </div>
         </div>
