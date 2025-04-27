@@ -1,33 +1,59 @@
 <div class="dashboard-container">
-  <header class="app-header">
-    <div class="logo">
-      <h1>Job Listings</h1>
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Job Listings</h1>
+      <p class="page-description">Manage your job postings and find matching candidates</p>
     </div>
-    <div class="actions">
-      <button class="action-btn" routerLink="/start">Back to Dashboard</button>
-      <button class="action-btn" routerLink="/upload-job">Add New Job</button>
+    <div class="header-actions">
+      <button class="btn btn-outlined" routerLink="/start">
+        <i class="icon fas fa-arrow-left"></i> Dashboard
+      </button>
+      <button class="btn btn-primary" routerLink="/upload-job">
+        <i class="icon fas fa-plus"></i> Add New Job
+      </button>
     </div>
   </header>
 
-  <div class="main-content">
-    <div class="card">
-      <h2>All Job Descriptions</h2>
+  <div class="content-card">
+    <div class="card-header">
+      <h2 class="card-title">All Job Descriptions</h2>
       
-      <div *ngIf="isLoading" class="text-center">
-        <div class="spinner"></div>
-        <p>Loading jobs...</p>
+      <div class="view-toggle">
+        <button class="view-toggle-btn active">
+          <i class="icon fas fa-th-large"></i> Grid
+        </button>
+        <button class="view-toggle-btn">
+          <i class="icon fas fa-list"></i> List
+        </button>
       </div>
-      
-      <div *ngIf="errorMessage" class="alert alert-danger">
-        {{errorMessage}}
+    </div>
+    
+    <div *ngIf="isLoading" class="text-center">
+      <div class="spinner"></div>
+      <p>Loading jobs...</p>
+    </div>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{errorMessage}}
+    </div>
+    
+    <div *ngIf="!isLoading && !errorMessage && jobs.length === 0" class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-clipboard-list"></i>
       </div>
-      
-      <div *ngIf="!isLoading && !errorMessage && jobs.length === 0" class="no-data-message">
-        No jobs found. Add job descriptions to get started.
+      <h3>No Jobs Found</h3>
+      <p>Start by adding job descriptions to your dashboard.</p>
+      <div class="empty-state-actions">
+        <button class="btn btn-primary" routerLink="/upload-job">
+          <i class="icon fas fa-plus"></i> Add Job Description
+        </button>
       </div>
-      
-      <div *ngIf="!isLoading && jobs.length > 0">
+    </div>
+    
+    <div *ngIf="!isLoading && jobs.length > 0">
+      <div class="filter-section">
         <div class="sort-controls">
+          <span class="sort-label">Sort by:</span>
           <div class="sort-buttons">
             <button 
               class="sort-btn" 
@@ -48,67 +74,83 @@
               Date {{getSortIcon('created_at')}}
             </button>
           </div>
-          
-          <div class="search-box">
-            <input 
-              type="text" 
-              [(ngModel)]="searchTerm" 
-              placeholder="Search jobs..." 
-              (keyup.enter)="search()">
-            <button class="search-btn" (click)="search()">Search</button>
-          </div>
         </div>
         
-        <div class="job-cards">
-          <div class="job-card" *ngFor="let job of jobs">
-            <div class="job-header">
-              <h3>{{job.title}}</h3>
-              <span class="industry-badge">{{job.industry}}</span>
-            </div>
+        <div class="search-filter">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            placeholder="Search jobs..." 
+            (keyup.enter)="search()">
+          <button class="search-btn" (click)="search()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="job-cards">
+        <div class="job-card" *ngFor="let job of jobs">
+          <div class="job-header">
+            <h3 class="job-title">{{job.title}}</h3>
+            <span class="industry-badge">{{job.industry}}</span>
+          </div>
+          
+          <div class="job-body">
+            <div class="job-description">{{getShortDescription(job.content)}}</div>
             
-            <div class="job-body">
-              <div class="job-content">{{getShortDescription(job.content)}}</div>
-              
-              <div class="skills-section" *ngIf="getSkillsCount(job.technical_skills) > 0">
-                <h4>Key Skills:</h4>
-                <div class="skills-list">
-                  <span class="skill-tag" *ngFor="let skill of getTopSkills(job.technical_skills, 3)">{{skill}}</span>
-                  <span class="skill-tag more" *ngIf="getSkillsCount(job.technical_skills) > 3">+{{getSkillsCount(job.technical_skills) - 3}} more</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="job-footer">
-              <span class="job-date">Added: {{job.created_at | date:'short'}}</span>
-              <div class="job-actions">
-                <button class="view-btn" (click)="showJobDetails(job)">View</button>
-                <button class="view-btn" (click)="findMatchingCVs(job)">Match CVs</button>
-                <button class="delete-btn" (click)="deleteJob(job)">Delete</button>
+            <div class="skills-section" *ngIf="getSkillsCount(job.technical_skills) > 0">
+              <h4 class="skills-title">Key Skills:</h4>
+              <div class="skills-list">
+                <span class="skill-tag" *ngFor="let skill of getTopSkills(job.technical_skills, 3)">{{skill}}</span>
+                <span class="skill-tag more" *ngIf="getSkillsCount(job.technical_skills) > 3">+{{getSkillsCount(job.technical_skills) - 3}} more</span>
               </div>
             </div>
           </div>
+          
+          <div class="job-footer">
+            <span class="job-date">
+              <i class="fas fa-calendar-alt"></i> {{job.created_at | date:'MMM d, y'}}
+            </span>
+            <div class="job-actions">
+              <button class="btn btn-icon" title="View Details" (click)="showJobDetails(job)">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-icon" title="Find Matching CVs" (click)="findMatchingCVs(job)">
+                <i class="fas fa-users"></i>
+              </button>
+              <button class="btn btn-icon" title="Delete Job" (click)="deleteJob(job)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="totalPages > 1">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        
+        <div class="page-numbers">
+          <button 
+            *ngFor="let page of getPageNumbers()"
+            class="page-number"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+            {{page}}
+          </button>
         </div>
         
-        <!-- Pagination -->
-        <div class="pagination-container" *ngIf="totalPages > 1">
-          <button 
-            class="pagination-btn" 
-            [disabled]="currentPage === 1"
-            (click)="goToPage(currentPage - 1)">
-            Previous
-          </button>
-          
-          <span class="page-indicator">
-            Page {{currentPage}} of {{totalPages}}
-          </span>
-          
-          <button 
-            class="pagination-btn" 
-            [disabled]="currentPage === totalPages"
-            (click)="goToPage(currentPage + 1)">
-            Next
-          </button>
-        </div>
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -116,36 +158,46 @@
 
 <!-- Job Detail Modal -->
 <div class="modal-overlay" *ngIf="showDetailModal">
-  <div class="modal-dialog job-detail-modal">
-    <div class="modal-header">
-      <h3>Job Details: {{selectedJob?.title}}</h3>
-      <button class="close-btn" (click)="closeJobDetail()">&times;</button>
-    </div>
-    <div class="modal-body job-detail-body">
-      <div class="job-detail-section">
-        <div class="job-detail-row">
-          <span class="detail-label">Industry:</span>
-          <span class="detail-value">{{selectedJob?.industry}}</span>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">{{selectedJob?.title}}</h3>
+        <button class="btn-close" (click)="closeJobDetail()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <div class="detail-row">
+            <span class="detail-label">Industry</span>
+            <span class="detail-value">{{selectedJob?.industry}}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date Added</span>
+            <span class="detail-value">{{selectedJob?.created_at | date:'medium'}}</span>
+          </div>
         </div>
-        <div class="job-detail-row">
-          <span class="detail-label">Added:</span>
-          <span class="detail-value">{{selectedJob?.created_at | date:'medium'}}</span>
+        
+        <div class="detail-section">
+          <h4 class="detail-title">Technical Skills</h4>
+          <div class="skills-list" *ngIf="selectedJob && getSkillsCount(selectedJob.technical_skills) > 0">
+            <span class="skill-tag" *ngFor="let skill of getAllSkills(selectedJob.technical_skills)">
+              {{skill}}
+            </span>
+          </div>
+          <p class="no-skills" *ngIf="selectedJob && getSkillsCount(selectedJob.technical_skills) === 0">
+            No specific technical skills defined for this job.
+          </p>
+        </div>
+        
+        <div class="detail-section">
+          <h4 class="detail-title">Full Description</h4>
+          <div class="detail-content">{{selectedJob?.content}}</div>
         </div>
       </div>
-      
-      <div class="job-detail-section">
-        <h4>Technical Skills</h4>
-        <div class="skills-list full-skills-list" *ngIf="selectedJob && getSkillsCount(selectedJob.technical_skills) > 0">
-          <span class="skill-tag" *ngFor="let skill of getAllSkills(selectedJob.technical_skills)">
-            {{skill}}
-          </span>
-        </div>
-        <p *ngIf="selectedJob && getSkillsCount(selectedJob.technical_skills) === 0">No specific technical skills defined for this job.</p>
-      </div>
-      
-      <div class="job-detail-section">
-        <h4>Full Description</h4>
-        <div class="job-full-content">{{selectedJob?.content}}</div>
+      <div class="modal-footer">
+        <button class="btn btn-outlined" (click)="closeJobDetail()">Close</button>
+        <button class="btn btn-primary" (click)="findMatchingCVs(selectedJob!); closeJobDetail();">Find Matching CVs</button>
       </div>
     </div>
   </div>
@@ -153,49 +205,77 @@
 
 <!-- Match Results Modal -->
 <div class="modal-overlay" *ngIf="showMatchesModal">
-  <div class="modal-dialog matches-modal">
-    <div class="modal-header">
-      <h3>Matching Candidates for: {{selectedJob?.title}}</h3>
-      <button class="close-btn" (click)="closeMatchesModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div *ngIf="!matchResults || matchResults.length === 0" class="no-data-message">
-        No matching candidates found for this job.
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Matching Candidates for: {{selectedJob?.title}}</h3>
+        <button class="btn-close" (click)="closeMatchesModal()">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-      
-      <div *ngIf="matchResults && matchResults.length > 0">
-        <div class="match-result-item" *ngFor="let match of matchResults; let i = index">
-          <div class="match-rank">{{i + 1}}</div>
-          <div class="match-details">
-            <h4>{{match.cv.name}}</h4>
-            <div class="match-scores">
-              <div class="score-bar">
-                <div class="score-bar-label">Overall Match</div>
-                <div class="score-bar-container">
-                  <div class="score-bar-fill" [ngClass]="getScoreClass(match.total_score)" [style.width]="getScoreWidth(match.total_score)"></div>
-                  <div class="score-bar-value">{{getScorePercentage(match.total_score)}}</div>
+      <div class="modal-body">
+        <div *ngIf="!matchResults || matchResults.length === 0" class="empty-state">
+          <div class="empty-state-icon">
+            <i class="fas fa-user-slash"></i>
+          </div>
+          <h3>No Matching Candidates</h3>
+          <p>No candidates match this job description's requirements.</p>
+        </div>
+        
+        <div *ngIf="matchResults && matchResults.length > 0" class="match-results">
+          <div class="match-card" *ngFor="let match of matchResults; let i = index">
+            <div class="match-rank">
+              <span class="rank-number">{{i + 1}}</span>
+              <div class="match-score-circle" [ngStyle]="{'background': getScoreGradient(match.total_score)}">
+                <span class="match-score-value">{{getScorePercentage(match.total_score)}}</span>
+              </div>
+            </div>
+            <div class="match-details">
+              <h4 class="candidate-name">{{match.cv.name}}</h4>
+              
+              <div class="score-details">
+                <div class="score-bar">
+                  <div class="score-bar-label">
+                    <span>Industry Match</span>
+                    <span>{{getScorePercentage(match.industry_score)}}</span>
+                  </div>
+                  <div class="score-bar-container">
+                    <div class="score-bar-fill industry" [style.width]="getScoreWidth(match.industry_score)"></div>
+                  </div>
+                </div>
+                
+                <div class="score-bar">
+                  <div class="score-bar-label">
+                    <span>Skills Match</span>
+                    <span>{{getScorePercentage(match.tech_skills_score)}}</span>
+                  </div>
+                  <div class="score-bar-container">
+                    <div class="score-bar-fill skills" [style.width]="getScoreWidth(match.tech_skills_score)"></div>
+                  </div>
+                </div>
+                
+                <div class="score-bar">
+                  <div class="score-bar-label">
+                    <span>Description Match</span>
+                    <span>{{getScorePercentage(match.description_match_score)}}</span>
+                  </div>
+                  <div class="score-bar-container">
+                    <div class="score-bar-fill description" [style.width]="getScoreWidth(match.description_match_score)"></div>
+                  </div>
                 </div>
               </div>
               
-              <div class="detail-scores">
-                <div class="detail-score">
-                  <span>Industry:</span>
-                  <span>{{getScorePercentage(match.industry_score)}}</span>
-                </div>
-                <div class="detail-score">
-                  <span>Skills:</span>
-                  <span>{{getScorePercentage(match.tech_skills_score)}}</span>
-                </div>
-                <div class="detail-score">
-                  <span>Description:</span>
-                  <span>{{getScorePercentage(match.description_match_score)}}</span>
-                </div>
+              <div class="match-actions">
+                <button class="btn btn-primary" [routerLink]="['/candidate-detail', match.cv.id]">
+                  View Candidate
+                </button>
               </div>
             </div>
-            
-            <button class="view-btn" [routerLink]="['/candidate-detail', match.cv.id]">View Candidate</button>
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outlined" (click)="closeMatchesModal()">Close</button>
       </div>
     </div>
   </div>
@@ -204,9 +284,7 @@
 <div class="loading-overlay" *ngIf="processingAction">
   <div class="loading-indicator">
     <div class="spinner"></div>
-    <p>
-      <strong>Processing...</strong>
-    </p>
+    <p><strong>Processing...</strong></p>
     <small>Please wait</small>
   </div>
 </div>

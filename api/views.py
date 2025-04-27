@@ -13,16 +13,13 @@ import docx
 import logging
 from datetime import datetime
 
-# Configure a logger for better debugging
 logger = logging.getLogger(__name__)
 
-# Add pagination for all viewsets
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
-# Keep your original CVViewSet, just add pagination and filters
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
@@ -119,7 +116,6 @@ class CVViewSet(viewsets.ModelViewSet):
         results.sort(key=lambda x: x['total_score'], reverse=True)
         return Response(results[0] if results else {'message': 'No suitable match found.'}, status=status.HTTP_200_OK if results else status.HTTP_404_NOT_FOUND)
 
-# Keep your original JobDescriptionViewSet, just add pagination and filters
 class JobDescriptionViewSet(viewsets.ModelViewSet):
     queryset = JobDescription.objects.all()
     serializer_class = JobDescriptionSerializer

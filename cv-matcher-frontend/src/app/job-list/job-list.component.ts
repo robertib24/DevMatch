@@ -107,6 +107,25 @@ export class JobListComponent implements OnInit {
     });
   }
 
+  getPageNumbers(): number[] {
+    const pageNumbers: number[] = [];
+    const maxPages = 5; // Show at most 5 page numbers
+    
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPages - 1);
+    
+    // Adjust if we're near the end
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(1, endPage - maxPages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+    
+    return pageNumbers;
+  }
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.loadJobs(page);
@@ -158,13 +177,14 @@ export class JobListComponent implements OnInit {
           this.matchResults = response;
           this.showMatchesModal = true;
         } else {
-          alert('No matching candidates found for this job.');
+          this.matchResults = [];
+          this.showMatchesModal = true;
         }
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error finding matching CVs:', err);
         this.processingAction = false;
-        alert('Error finding matching candidates. Please try again.');
+        this.errorMessage = 'Error finding matching candidates. Please try again.';
       }
     });
   }
@@ -228,5 +248,15 @@ export class JobListComponent implements OnInit {
     if (score >= 0.7) return 'high-score';
     if (score >= 0.5) return 'medium-score';
     return 'low-score';
+  }
+
+  getScoreGradient(score: number): string {
+    if (score >= 0.7) {
+      return 'linear-gradient(135deg, #4caf50, #2e7d32)';
+    } else if (score >= 0.5) {
+      return 'linear-gradient(135deg, #ff9800, #e65100)';
+    } else {
+      return 'linear-gradient(135deg, #f44336, #c62828)';
+    }
   }
 }
