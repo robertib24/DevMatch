@@ -2,7 +2,8 @@
   <button (click)="goBack()" class="back-btn">&larr; Back to Dashboard</button>
 
   <div *ngIf="isLoading" class="loading-indicator">
-    Loading candidate details...
+    <div class="spinner"></div>
+    <p>Loading candidate details...</p>
   </div>
 
   <div *ngIf="errorMessage && !isLoading" class="error-message">
@@ -26,10 +27,26 @@
     <p *ngIf="!cv.file" class="warning">Original file URL not available.</p>
 
     <h3>CV Content:</h3>
-    <!-- This is the important part - ensuring CV content is displayed with proper wrapping -->
-    <div class="cv-content">
-      <!-- Use whitespace: pre-wrap to preserve formatting but allow wrapping -->
-      <p style="white-space: pre-wrap;">{{ cv.content }}</p>
+    
+    <!-- Debug info - can be removed in production -->
+    <div class="debug-info">
+      <small>Content Length: {{ cv.content?.length || 0 }} characters</small>
+    </div>
+    
+    <!-- CV content display -->
+    <div class="cv-content" *ngIf="cv.content">
+      <pre>{{ cv.content }}</pre>
+    </div>
+    
+    <!-- No content warning -->
+    <div *ngIf="!cv.content" class="warning">
+      No content available for this CV. This could be due to:
+      <ul>
+        <li>The document couldn't be processed properly</li>
+        <li>The file format is not supported</li>
+        <li>The CV is stored but the content wasn't extracted</li>
+      </ul>
+      Try downloading the original document instead.
     </div>
   </div>
 

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 interface CvDetail {
   id: number;
@@ -14,7 +14,7 @@ interface CvDetail {
 @Component({
   selector: 'app-candidate-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './candidate-detail.component.html',
   styleUrls: ['./candidate-detail.component.scss']
 })
@@ -49,14 +49,18 @@ export class CandidateDetailComponent implements OnInit {
     this.errorMessage = null;
     this.cv = null;
 
+    console.log('Loading CV details for ID:', id);
+
     // Fetch the CV details from the API
     this.http.get<CvDetail>(`${this.apiUrl}/api/cvs/${id}/`).subscribe({
       next: (data) => {
         console.log('CV data received:', data);
         
-        // Process the CV content for proper display if needed
-        if (data && !data.content) {
-          console.warn('CV content is empty');
+        // Log content information for debugging
+        if (data && data.content) {
+          console.log('Content received with length:', data.content.length);
+        } else {
+          console.warn('CV content is empty or missing in API response');
         }
         
         // Store the CV data

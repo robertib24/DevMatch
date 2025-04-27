@@ -1,18 +1,48 @@
 <div class="site-wrapper">
-  <header class="site-header">
-    <app-header
-      class="width-p-100"
-      [heading]="heading$ || undefined"
-    ></app-header>
-  </header>
-
   <aside class="site-sidebar position-relative">
-    <div>
-      <a routerLink="/start" style="cursor: pointer; display: inline-block;"> <img src="assets/images/dev-matcher-logo.png" class="width-65" alt="Logo - Home" /> </a>
+    <div class="logo-container">
+      <a routerLink="/start" class="logo-link">
+        <img src="assets/images/dev-matcher-logo.png" class="logo-image" alt="Logo - Home" />
+      </a>
     </div>
+    
+    <nav class="main-nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a routerLink="/start" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a routerLink="/cv-list" routerLinkActive="active">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">CVs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a routerLink="/job-list" routerLinkActive="active">
+            <span class="nav-icon">💼</span>
+            <span class="nav-label">Jobs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a routerLink="/match-list" routerLinkActive="active">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Matches</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </aside>
 
   <main class="site-main">
-    <router-outlet></router-outlet>
+    <header class="site-header">
+      <app-header [heading]="getPageTitle()"></app-header>
+    </header>
+    
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
   </main>
 </div>

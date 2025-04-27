@@ -4,7 +4,7 @@ from .models import CV, JobDescription, MatchResult
 class CVSerializer(serializers.ModelSerializer):
     class Meta:
         model = CV
-        fields = ['id', 'name', 'file', 'processed_at']
+        fields = ['id', 'name', 'file', 'content', 'content','processed_at']
 
 class JobDescriptionSerializer(serializers.ModelSerializer):
     class Meta:

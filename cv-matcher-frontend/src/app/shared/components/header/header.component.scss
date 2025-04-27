@@ -1,0 +1,151 @@
+@import "../../../../styles/variables.scss";
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+}
+
+.page-info {
+  .page-title {
+    color: $color-primary-dark;
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+    color: $color-grey-2;
+    font-size: 0.85rem;
+    
+    .breadcrumb-item {
+      display: inline-block;
+      
+      &:not(.current) {
+        color: $color-primary;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        
+        &:hover {
+          color: darken($color-primary, 10%);
+          text-decoration: underline;
+        }
+      }
+      
+      &.current {
+        color: $color-grey-2;
+        font-weight: 500;
+      }
+    }
+    
+    .separator {
+      margin: 0 8px;
+      color: $color-grey-3;
+    }
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  
+  .date-display {
+    color: $color-grey-2;
+    font-size: 0.9rem;
+  }
+  
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: $color-grey-2;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: $color-grey-5;
+      color: $color-grey-1;
+    }
+    
+    .icon {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .date-display {
+    font-size: 0.8rem;
+  }
+}
+
+// Dark theme styles
+:host-context(.dark-theme) {
+  .page-title {
+    color: #e0e0e0;
+  }
+  
+  .breadcrumbs {
+    color: #a0a0a0;
+    
+    .breadcrumb-item:not(.current) {
+      color: $color-primary-light;
+      
+      &:hover {
+        color: lighten($color-primary-light, 10%);
+      }
+    }
+    
+    .separator {
+      color: #555;
+    }
+  }
+  
+  .date-display {
+    color: #a0a0a0;
+  }
+  
+  .theme-toggle {
+    color: #a0a0a0;
+    
+    &:hover {
+      background-color: #333;
+      color: #e0e0e0;
+    }
+  }
+}

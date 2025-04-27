@@ -27,6 +27,7 @@ h3 {
 
 .metadata {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   font-size: 0.9rem;
   color: $color-grey-2;
@@ -54,21 +55,35 @@ h3 {
   }
 }
 
-// Styled CV content section - critical for proper content display
+// Debug info
+.debug-info {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+}
+
+// Enhanced CV content section
 .cv-content {
   background-color: #f9f9f9;
   border: 1px solid #eee;
   border-radius: 6px;
   padding: 20px;
-  margin-top: 10px;
+  margin: 10px 0;
+  overflow: auto;
+  min-height: 200px;
+  max-height: 600px; // Add scrollbar for very long content
   
-  // Ensure proper formatting of CV content
-  p {
+  pre {
     margin: 0;
-    line-height: 1.6;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.5;
     color: $color-grey-1;
     font-size: 0.95rem;
-    white-space: pre-wrap; // This preserves formatting but allows wrapping
+    white-space: pre-wrap; // Preserves whitespace but allows wrapping
+    word-break: break-word; // Prevents text from overflowing
   }
 }
 
@@ -76,10 +91,19 @@ h3 {
   background-color: #fff3e0;
   color: #e65100;
   border: 1px solid #ffcc80;
-  padding: 10px 15px;
+  padding: 15px;
   border-radius: 4px;
   margin: 10px 0 20px 0;
   font-size: 0.9rem;
+  
+  ul {
+    margin-top: 10px;
+    margin-left: 20px;
+    
+    li {
+      margin-bottom: 5px;
+    }
+  }
 }
 
 .back-btn {
@@ -103,7 +127,21 @@ h3 {
   text-align: center;
   padding: 30px;
   color: $color-grey-2;
-  font-style: italic;
+  
+  .spinner {
+    margin: 0 auto 15px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border-left-color: $color-primary;
+    animation: spin 1s ease infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 }
 
 .error-message {

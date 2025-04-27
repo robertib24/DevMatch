@@ -22,6 +22,7 @@ class MatchResult(models.Model):
     tech_skills_score = models.FloatField()  # 30%
     description_match_score = models.FloatField()  # 60%
     matched_at = models.DateTimeField(auto_now_add=True)
+    explanation = models.CharField(max_length=255, blank=True)
     
     class Meta:
         unique_together = ('cv', 'job')

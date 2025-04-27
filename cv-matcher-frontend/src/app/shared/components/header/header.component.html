@@ -1,14 +1,15 @@
-<div class="flex justify-between">
-    <div>
-      <div class="font-size-small-1">Viewing</div>
-  
-      <h1 class="font-size-large-1">
-        {{ heading }}
-      </h1>
-    </div>
-  
-    <div class="font-size-small-1">
-      <p>{{ date | async | date: 'short' }}</p>
+<div class="app-header">
+  <div class="header-content">
+    <div class="page-info">
+      <h1 class="page-title">{{ heading }}</h1>
     </div>
   </div>
-  
+  <div class="header-actions">
+    <div class="user-info">
+      <span class="date-display">{{ date | async | date: 'EEEE, MMMM d, y' }}</span>
+      <button class="theme-toggle" (click)="toggleTheme()" title="Toggle theme">
+        <i class="icon">{{ isDarkTheme ? '☀️' : '🌙' }}</i>
+      </button>
+    </div>
+  </div>
+</div>

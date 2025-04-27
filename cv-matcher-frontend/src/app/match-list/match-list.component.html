@@ -86,7 +86,7 @@
         </div>
       </div>
       
-      <!-- Grid View -->
+      <!-- Grid View with Job Details -->
       <div class="match-cards" *ngIf="viewMode === 'grid'">
         <div class="match-card" *ngFor="let match of filteredMatches">
           <div class="match-score-container">
@@ -113,8 +113,13 @@
                 <i class="icon">💼</i> Job:
               </div>
               <div class="entity-value">
-                <a (click)="viewJobDetails(match.job.id)">{{match.job.title}}</a>
+                <a (click)="showJobDetails(match.job)" class="job-title-link">{{match.job.title}}</a>
               </div>
+            </div>
+            
+            <!-- Job industry badge -->
+            <div class="job-industry">
+              <span class="industry-badge">{{match.job.industry}}</span>
             </div>
           </div>
           
@@ -148,16 +153,20 @@
             <button class="btn btn-sm btn-primary" [routerLink]="['/candidate-detail', match.cv.id]">
               View CV
             </button>
+            <button class="btn btn-sm btn-outlined" (click)="showJobDetails(match.job)">
+              Job Details
+            </button>
           </div>
         </div>
       </div>
       
-      <!-- List View -->
+      <!-- List View with Job Details button -->
       <div class="match-list" *ngIf="viewMode === 'list'">
         <div class="list-headers">
           <div class="header-score">Score</div>
           <div class="header-candidate">Candidate</div>
           <div class="header-job">Job</div>
+          <div class="header-industry">Industry</div>
           <div class="header-breakdown">Score Breakdown</div>
           <div class="header-date">Date</div>
           <div class="header-actions">Actions</div>
@@ -173,7 +182,10 @@
             <a [routerLink]="['/candidate-detail', match.cv.id]">{{match.cv.name}}</a>
           </div>
           <div class="row-job">
-            <a (click)="viewJobDetails(match.job.id)">{{match.job.title}}</a>
+            <a (click)="showJobDetails(match.job)" class="job-title-link">{{match.job.title}}</a>
+          </div>
+          <div class="row-industry">
+            <span class="industry-badge">{{match.job.industry}}</span>
           </div>
           <div class="row-breakdown">
             <div class="mini-bars">
@@ -192,6 +204,9 @@
           <div class="row-actions">
             <button class="btn btn-icon" [routerLink]="['/candidate-detail', match.cv.id]" title="View CV">
               <i class="icon">👤</i>
+            </button>
+            <button class="btn btn-icon" (click)="showJobDetails(match.job)" title="View Job Details">
+              <i class="icon">💼</i>
             </button>
           </div>
         </div>
@@ -222,6 +237,95 @@
           (click)="goToPage(currentPage + 1)">
           Next &rarr;
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Job Details Modal -->
+<div class="modal-overlay" *ngIf="showJobDetailModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">{{selectedJob?.title}}</h3>
+        <button class="btn-close" (click)="closeJobDetails()">
+          <i class="icon">✖</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Job Details Content -->
+        <div class="job-detail-content">
+          <!-- Industry and Date Section -->
+          <div class="detail-section">
+            <div class="detail-row">
+              <span class="detail-label">Industry</span>
+              <span class="detail-value">
+                <span class="industry-badge large">{{selectedJob?.industry}}</span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date Posted</span>
+              <span class="detail-value">{{selectedJob?.created_at | date:'medium'}}</span>
+            </div>
+          </div>
+          
+          <!-- Technical Skills Section -->
+          <div class="detail-section">
+            <h4 class="detail-title">Technical Skills</h4>
+            <div class="skills-list" *ngIf="getSkillsCount() > 0">
+              <div class="skill-tag" *ngFor="let skill of getSkillsList()">
+                {{skill}}
+                <span class="skill-weight" *ngIf="getSkillWeight(skill) !== 100">
+                  ({{getSkillWeight(skill)}}%)
+                </span>
+              </div>
+            </div>
+            <p class="no-skills" *ngIf="getSkillsCount() === 0">
+              No specific technical skills defined for this job.
+            </p>
+          </div>
+          
+          <!-- Job Description Section -->
+          <div class="detail-section">
+            <h4 class="detail-title">Job Description</h4>
+            <div class="description-content">
+              <p *ngFor="let paragraph of getJobDescriptionParagraphs()">
+                {{paragraph}}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Match Statistics Section -->
+          <div class="detail-section" *ngIf="jobMatchStats">
+            <h4 class="detail-title">Match Statistics</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-label">Average Match Score</span>
+                <span class="stat-value">{{formatScore(jobMatchStats.avgScore)}}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Total Matches</span>
+                <span class="stat-value">{{jobMatchStats.totalMatches}}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">High Matches (>70%)</span>
+                <span class="stat-value">{{jobMatchStats.highMatches}}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Medium Matches (50-70%)</span>
+                <span class="stat-value">{{jobMatchStats.mediumMatches}}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Low Matches (<50%)</span>
+                <span class="stat-value">{{jobMatchStats.lowMatches}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outlined" (click)="closeJobDetails()">Close</button>
+        <button class="btn btn-primary" routerLink="/job-list" (click)="closeJobDetails()">View All Jobs</button>
       </div>
     </div>
   </div>

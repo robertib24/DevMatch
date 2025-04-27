@@ -10,93 +10,205 @@
   display: grid;
   height: 100%;
   width: 100%;
-  padding-right: 24px;
   min-height: 100%;
-  gap: 24px;
-
+  
   grid-template:
-    "sidebar header" min-content
-    "sidebar main" 1fr
-    "sidebar footer" min-content / 4rem 1fr;
-}
-
-.site-header {
-  grid-area: header;
-  min-width: 0;
-  display: flex;
-  justify-content: space-between;
-  padding-top: 20px;
-}
-
-.site-wrapper {
-  background: $color-grey-5;
-}
-
-.site-sidebar {
-  background-color: $color-primary;
-
-  P {
-    color: white;
-    font-weight: bold;
-    transform: translate3d(-50%, -50%, 0);
-    word-break: break-word;
-    width: 0;
-  }
-}
-
-.site-main {
-  background-color: white;
+    "sidebar main" 1fr / 80px 1fr;
 }
 
 .site-sidebar {
   grid-area: sidebar;
-  min-width: 0;
-  z-index: 4;
-
+  // Updated to a lighter color to make the black logo visible
+  background-color: white;
+  color: $color-grey-1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-}
-
-.sidebar-nav {
-  margin-top: 30px;
-  width: 100%;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  margin-bottom: 10px;
-}
-
-.nav-item a {
-  display: flex;
   align-items: center;
-  padding: 10px 15px;
-  color: #333;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  padding: 20px 0;
+  position: fixed;
+  height: 100%;
+  width: 80px;
+  z-index: 10;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  border-right: 1px solid $color-grey-4;
 }
 
-.nav-item a:hover {
-  background-color: rgba(2, 136, 209, 0.1);
+.logo-container {
+  padding: 0;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+  
+  .logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .logo-image {
+      height: 40px;
+      width: auto;
+    }
+  }
 }
 
-.nav-item a.active {
-  background-color: rgba(2, 136, 209, 0.2);
-  color: #0288d1;
-  font-weight: 500;
+.main-nav {
+  width: 100%;
+  
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .nav-item {
+    width: 100%;
+    margin-bottom: 4px;
+    
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0;
+      // Updated colors for light sidebar
+      color: $color-grey-2;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      width: 100%;
+      
+      &:hover {
+        color: $color-primary;
+        background-color: $color-grey-5;
+      }
+      
+      &.active {
+        color: $color-primary;
+        background-color: $color-primary-light;
+        border-left-color: $color-primary;
+      }
+    }
+    
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    
+    .nav-label {
+      font-size: 0.75rem;
+    }
+  }
 }
 
-.nav-icon {
-  margin-right: 10px;
-  font-size: 18px;
-  display: inline-block;
-  width: 24px;
-  text-align: center;
+.site-main {
+  grid-area: main;
+  overflow-x: hidden;
+  padding: 0 30px 30px;
+  margin-left: 80px;
+  background-color: $color-grey-5;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 5;
+  padding: 15px 0;
+  border-bottom: 1px solid $color-grey-4;
+}
+
+.content-area {
+  padding-top: 20px;
+}
+
+// Responsive adjustments
+@media (max-width: 992px) {
+  .site-wrapper {
+    grid-template:
+      "sidebar" auto
+      "main" 1fr / 1fr;
+  }
+  
+  .site-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .logo-container {
+    margin-bottom: 0;
+  }
+  
+  .main-nav {
+    .nav-list {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+    
+    .nav-item {
+      width: auto;
+      margin-bottom: 0;
+      
+      a {
+        padding: 8px 15px;
+        flex-direction: row;
+        border-radius: 4px;
+        border-left: none;
+      }
+      
+      .nav-icon {
+        margin-right: 8px;
+        margin-bottom: 0;
+      }
+    }
+  }
+  
+  .site-main {
+    margin-left: 0;
+    padding: 0 15px 15px;
+  }
+}
+
+// Dark theme support
+body.dark-theme {
+  background-color: #121212;
+  color: #e0e0e0;
+  
+  .site-sidebar {
+    background-color: #1e1e1e;
+    border-right-color: #333;
+    
+    .nav-item a {
+      color: #a0a0a0;
+      
+      &:hover {
+        color: $color-primary-light;
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      
+      &.active {
+        color: $color-primary-light;
+        background-color: rgba($color-primary, 0.2);
+        border-left-color: $color-primary-light;
+      }
+    }
+  }
+  
+  .site-main {
+    background-color: #121212;
+  }
+  
+  .site-header {
+    background-color: #1e1e1e;
+    border-bottom-color: #333;
+  }
 }

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './shared/components/header/header.component';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -8,8 +9,23 @@ import { HeaderComponent } from './shared/components/header/header.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
-  title = 'app';
+export class AppComponent implements OnInit {
+  title = 'Dashboard';
+  currentRoute = '';
 
-  public readonly heading$: string = 'Start';
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    // Track current route for page title
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.currentRoute = event.url;
+    });
+  }
+
+  // Get the current page title - simplified to just show Dashboard
+  getPageTitle(): string {
+    return 'Dashboard';
+  }
 }

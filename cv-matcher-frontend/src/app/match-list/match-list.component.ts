@@ -14,12 +14,23 @@ interface MatchResult {
     id: number;
     title: string;
     industry: string;
+    content: string;
+    technical_skills: { [key: string]: number };
+    created_at: string;
   };
   total_score: number;
   industry_score: number;
   tech_skills_score: number;
   description_match_score: number;
   matched_at: string;
+}
+
+interface JobMatchStats {
+  avgScore: number;
+  totalMatches: number;
+  highMatches: number;
+  mediumMatches: number;
+  lowMatches: number;
 }
 
 @Component({
@@ -38,7 +49,7 @@ export class MatchListComponent implements OnInit {
   // Pagination properties
   currentPage = 1;
   totalPages = 1;
-  itemsPerPage = 25; // Increased from 9 to 25
+  itemsPerPage = 25;
   
   // Sorting properties
   sortField = 'total_score';
@@ -46,11 +57,12 @@ export class MatchListComponent implements OnInit {
   
   // Search and filter properties
   searchTerm = '';
-  viewMode = 'grid'; // 'grid' or 'list'
+  viewMode = 'grid';
   
-  // Modal properties
+  // Job details modal properties
   showJobDetailModal = false;
   selectedJob: any = null;
+  jobMatchStats: JobMatchStats | null = null;
   
   private apiUrl = 'http://localhost:8000';
   
@@ -135,15 +147,69 @@ export class MatchListComponent implements OnInit {
     this.currentPage = 1;
     this.loadMatches();
   }
+  
+  // Job details methods
+  showJobDetails(job: any): void {
+    this.selectedJob = job;
+    this.showJobDetailModal = true;
+    
+    // Calculate job match statistics
+    this.calculateJobMatchStats(job.id);
+  }
+  
+  calculateJobMatchStats(jobId: number): void {
+    // Find all matches for this job
+    const jobMatches = this.matches.filter(match => match.job.id === jobId);
+    
+    if (jobMatches.length === 0) {
+      this.jobMatchStats = null;
+      return;
+    }
+    
+    // Calculate statistics
+    const totalMatches = jobMatches.length;
+    const avgScore = jobMatches.reduce((sum, match) => sum + match.total_score, 0) / totalMatches;
+    const highMatches = jobMatches.filter(match => match.total_score >= 0.7).length;
+    const mediumMatches = jobMatches.filter(match => match.total_score >= 0.5 && match.total_score < 0.7).length;
+    const lowMatches = jobMatches.filter(match => match.total_score < 0.5).length;
+    
+    this.jobMatchStats = {
+      avgScore,
+      totalMatches,
+      highMatches,
+      mediumMatches,
+      lowMatches
+    };
+  }
+  
+  closeJobDetails(): void {
+    this.showJobDetailModal = false;
+    this.selectedJob = null;
+    this.jobMatchStats = null;
+  }
+  
+  getSkillsCount(): number {
+    if (!this.selectedJob || !this.selectedJob.technical_skills) return 0;
+    return Object.keys(this.selectedJob.technical_skills).length;
+  }
+  
+  getSkillsList(): string[] {
+    if (!this.selectedJob || !this.selectedJob.technical_skills) return [];
+    return Object.keys(this.selectedJob.technical_skills);
+  }
+  
+  getSkillWeight(skill: string): number {
+    if (!this.selectedJob || !this.selectedJob.technical_skills) return 100;
+    return this.selectedJob.technical_skills[skill] || 100;
+  }
+  
+  getJobDescriptionParagraphs(): string[] {
+    if (!this.selectedJob || !this.selectedJob.content) return [];
+    return this.selectedJob.content.split('\n').filter((line: string) => line.trim() !== '');
+  }
 
   viewCVDetails(cvId: number): void {
     this.router.navigate(['/candidate-detail', cvId]);
-  }
-
-  viewJobDetails(jobId: number): void {
-    // Navigate to job detail page
-    // For now, just show an alert
-    alert(`Job ID: ${jobId} - In a complete implementation, this would navigate to the job details page.`);
   }
 
   formatDate(dateString: string): string {
@@ -202,10 +268,11 @@ export class MatchListComponent implements OnInit {
   exportToCSV(): void {
     if (this.matches.length === 0) return;
     
-    const headers = ['Candidate', 'Job', 'Total Score', 'Industry Score', 'Skills Score', 'Description Score', 'Date'];
+    const headers = ['Candidate', 'Job', 'Industry', 'Total Score', 'Industry Score', 'Skills Score', 'Description Score', 'Date'];
     const rows = this.matches.map(match => [
       match.cv.name,
       match.job.title,
+      match.job.industry,
       this.formatScore(match.total_score),
       this.formatScore(match.industry_score),
       this.formatScore(match.tech_skills_score),
