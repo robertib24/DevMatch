@@ -1,8 +1,8 @@
-# CV-Job Matcher
+# DevMatch
 
 A modern web application that uses AI to match CVs with job descriptions, helping recruiters find the best candidates for positions.
 
-![CV-Job Matcher Dashboard](https://i.imgur.com/UVbKq9s.png)
+![DevMatch Dashboard](https://i.imgur.com/UVbKq9s.png)
 
 ## Features
 
