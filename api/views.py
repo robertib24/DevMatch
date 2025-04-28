@@ -281,9 +281,9 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
 
     def _parse_job_description_text(self, text):
         data = {
-            'title': None,
-            'industry': 'Not Specified',
-            'technical_skills': {},
+        'title': None,
+        'industry': 'IT',  # Default to IT industry
+        'technical_skills': {},
         }
         lines = text.splitlines()
         potential_skills = []
@@ -305,20 +305,35 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                         break
         # If we didn't find the title after marker, try a heuristic (first line?)
         if not data['title'] and lines:
-             first_line = lines[0].strip()
-             # Consider the first line as title if it's not too long and not a generic header
-             if len(first_line.split()) < 10 and not first_line.lower().startswith("company overview"):
-                   print(f"Using first line as fallback title: '{first_line}'")
-                   data['title'] = first_line
+            first_line = lines[0].strip()
+            # Consider the first line as title if it's not too long and not a generic header
+            if len(first_line.split()) < 10 and not first_line.lower().startswith("company overview"):
+                print(f"Using first line as fallback title: '{first_line}'")
+                data['title'] = first_line
 
 
-        # Extract Industry
+        # Extract Industry with improved detection
+        industry_found = False
         for line in lines:
             line_stripped = line.strip()
             if line_stripped.lower().startswith("industry:"):
-                 data['industry'] = line_stripped[len("industry:"):].strip()
-                 print(f"Found Industry: {data['industry']}")
-                 break
+                data['industry'] = line_stripped[len("industry:"):].strip()
+                industry_found = True
+                print(f"Found Industry: {data['industry']}")
+                break
+            # Additional checks for industry
+            elif "industry" in line_stripped.lower() and ":" in line_stripped:
+                parts = line_stripped.split(":", 1)
+                if len(parts) > 1 and parts[0].lower().strip().endswith("industry"):
+                    data['industry'] = parts[1].strip()
+                    industry_found = True
+                    print(f"Found Industry (alt format): {data['industry']}")
+                    break
+    
+        # If no industry was found in the text, ensure we're using our default
+        if not industry_found or not data['industry']:
+            data['industry'] = 'IT'
+            print(f"Using default industry: {data['industry']}")
 
         # Extract Skills
         print("Scanning for skills sections...")
@@ -326,13 +341,13 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
             line_stripped = line.strip()
             line_lower = line_stripped.lower()
 
-            # Detect section starts
+        # Detect section starts
             if line_lower.startswith("required qualifications") or \
-               line_lower.startswith("qualifications:") or \
-               line_lower.startswith("preferred skills") or \
-               line_lower.startswith("skills:") or \
-               line_lower.startswith("technical skills") or \
-               line_lower.startswith("requirements"):
+            line_lower.startswith("qualifications:") or \
+            line_lower.startswith("preferred skills") or \
+            line_lower.startswith("skills:") or \
+            line_lower.startswith("technical skills") or \
+            line_lower.startswith("requirements"):
                 if not in_skills_section:
                     print(f"Entering potential skills section at line: '{line_stripped}'")
                     in_skills_section = True
@@ -341,16 +356,16 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
             # Detect section ends / other major sections
             # Check if we ARE in a section BEFORE exiting
             if in_skills_section and (
-               line_lower.startswith("benefits:") or \
-               line_lower.startswith("key responsibilities:") or \
-               line_lower.startswith("responsibilities:") or \
-               line_lower.startswith("company overview:") or \
-               line_lower.startswith("about us:") or \
-               line_lower.startswith("job description:") or \
-               (line_stripped.endswith(':') and len(line_stripped.split()) < 5) ):
-                 print(f"Exiting potential skills section at line: '{line_stripped}'")
-                 in_skills_section = False
-                 # Skip this line, it's part of a new section
+            line_lower.startswith("benefits:") or \
+            line_lower.startswith("key responsibilities:") or \
+            line_lower.startswith("responsibilities:") or \
+            line_lower.startswith("company overview:") or \
+            line_lower.startswith("about us:") or \
+            line_lower.startswith("job description:") or \
+            (line_stripped.endswith(':') and len(line_stripped.split()) < 5) ):
+                print(f"Exiting potential skills section at line: '{line_stripped}'")
+                in_skills_section = False
+                # Skip this line, it's part of a new section
 
             # Add skill if we are in a section and the line seems valid
             if in_skills_section and line_stripped:
@@ -359,14 +374,14 @@ class JobDescriptionViewSet(viewsets.ModelViewSet):
                 if skill_match:
                     skill = skill_match.group(1).strip()
                 elif len(line_stripped.split()) < 15:
-                     # Heuristic for lines without a marker, only if they don't appear to be titles
-                     if not line_stripped.endswith(':'):
-                          skill = line_stripped
+                    # Heuristic for lines without a marker, only if they don't appear to be titles
+                    if not line_stripped.endswith(':'):
+                        skill = line_stripped
 
                 skill = skill.rstrip('.').strip()
                 if skill and len(skill) > 1:
                     if not (skill.endswith('.') or skill.endswith(':')):
-                         potential_skills.append(skill)
+                        potential_skills.append(skill)
 
         # Process skills
         unique_skills = sorted(list(set(potential_skills)))
