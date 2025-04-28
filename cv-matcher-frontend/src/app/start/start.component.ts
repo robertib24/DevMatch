@@ -77,16 +77,23 @@ export class StartComponent implements OnInit {
   loadJobs(): void {
     this.isLoadingJobs = true;
     this.errorMessage = null;
-    this.http.get<any>(`${this.apiUrl}/api/jobs/`).subscribe({
-      next: (data) => {
-        console.log('Jobs response:', data);
-        if (Array.isArray(data)) {
-          this.jobs = data;
-        } else if (data && Array.isArray(data.results)) {
-          this.jobs = data.results;
+    
+    let params = new HttpParams().set('page_size', '50');
+    
+    this.http.get<any>(`${this.apiUrl}/api/jobs/`, { params }).subscribe({
+      next: (response) => {
+        console.log('Jobs response:', response);
+        if (Array.isArray(response)) {
+          this.jobs = response;
+        } else if (response && Array.isArray(response.results)) {
+          this.jobs = response.results;
+          
+          if (response.next) {
+            this.fetchAllJobPages(response.next, response.results);
+          }
         } else {
           this.jobs = [];
-          console.error('Unexpected jobs data format:', data);
+          console.error('Unexpected jobs data format:', response);
         }
         this.isLoadingJobs = false;
       },
@@ -95,6 +102,22 @@ export class StartComponent implements OnInit {
         this.errorMessage = 'Failed to load jobs. Please ensure the backend server is running.';
         this.isLoadingJobs = false;
       }
+    });
+  }
+  
+  private fetchAllJobPages(nextUrl: string, accumulatedJobs: any[]): void {
+    this.http.get<any>(nextUrl).subscribe({
+      next: (response) => {
+        if (response && Array.isArray(response.results)) {
+          const allJobs = [...accumulatedJobs, ...response.results];
+          this.jobs = allJobs;
+          
+          if (response.next) {
+            this.fetchAllJobPages(response.next, allJobs);
+          }
+        }
+      },
+      error: (error) => console.error('Error fetching additional job pages:', error)
     });
   }
 

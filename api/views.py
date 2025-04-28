@@ -582,6 +582,7 @@ def get_statistics(request):
     """
     Get system statistics with optimized database queries and caching.
     """
+    cache.clear()
     # Try to get statistics from cache
     stats_cache_key = 'system_statistics'
     cached_stats = cache.get(stats_cache_key)
