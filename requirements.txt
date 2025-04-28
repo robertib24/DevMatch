@@ -1,6 +1,13 @@
-django==5.0.14
+Django==5.2
 djangorestframework==3.15.0
+django-cors-headers==4.3.0
+
+
 python-docx==1.1.0
+python-dotenv==1.0.0
+
 google-generativeai==0.7.0
+psycopg2-binary==2.9.9
+
 pandas==2.2.1
 numpy==1.26.3
